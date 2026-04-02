@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aripdevs</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' }
+</script>
+
+<style>
+  :root {
+    --glass-bg: rgba(255,255,255,0.15);
+    --glass-border: rgba(255,255,255,0.15);
+    --text-main: #e2e8f0;
+  }
+
+  .dark {
+    --glass-bg: rgba(15,23,42,0.5);
+    --glass-border: rgba(255,255,255,0.08);
+    --text-main: #f1f5f9;
+  }
+
+  body {
+    color: var(--text-main);
+    min-height:100vh;
+    overflow-x:hidden;
+    background: #020617; /* DARK BASE FIX */
+  }
+
+  /* DARKER ANIMATED BG */
+  .animated-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(45deg, #1e3a8a, #4c1d95, #0f172a, #312e81);
+    background-size: 300% 300%;
+    animation: gradientMove 18s ease infinite;
+    filter: blur(80px);
+    opacity: 0.5;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; animation:fade .4s ease; }
+
+  @keyframes fade {
+    from {opacity:0; transform:translateY(10px);} 
+    to {opacity:1; transform:translateY(0);} 
+  }
+</style>
+</head>
+
+<body class="p-4 md:p-6">
+
+<div class="animated-bg"></div>
+
+<div class="max-w-md mx-auto">
+
+  <!-- HEADER -->
+  <div class="glass rounded-2xl p-3 mb-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-blue-600/80 rounded-xl flex items-center justify-center text-white font-bold">A</div>
+      <div>
+        <h1 class="text-sm font-bold">aripdevs</h1>
+        <p class="text-[10px] uppercase text-blue-300 font-bold">Business Card</p>
+      </div>
+    </div>
+
+    <!-- FIXED TOGGLE -->
+    <button id="themeBtn" class="px-3 py-1.5 rounded-lg text-sm bg-white/10 hover:bg-white/20 transition">
+      🌙
+    </button>
+  </div>
+
+  <!-- NAV -->
+  <div class="glass rounded-xl p-1 flex gap-1 mb-4">
+    <button onclick="showTab('main')" id="btn-main" class="tab-btn flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white">Main</button>
+    <button onclick="showTab('prod')" id="btn-prod" class="tab-btn flex-1 py-2 rounded-lg text-xs font-bold">Prod</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="glass rounded-2xl p-6">
+
+    <!-- MAIN -->
+    <div id="main" class="tab-content active">
+      <div class="flex items-center gap-4">
+
+        <div class="relative w-20 h-20 flex-shrink-0">
+          <div class="absolute inset-0 bg-blue-400/30 blur-xl rounded-full"></div>
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Arip" class="relative w-20 h-20 rounded-full border border-white/20">
+        </div>
+
+        <div class="text-right w-full">
+          <h2 class="font-bold text-lg">Arip Rahman, S.Kom</h2>
+          <p class="text-sm text-slate-300">ariprahman31@gmail.com</p>
+          <p class="text-sm text-slate-300">aripdevs.github.io</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PROD -->
+    <div id="prod" class="tab-content">
+      <div class="space-y-3">
+
+        <div class="p-4 rounded-xl bg-white/5 hover:scale-[1.02] transition">
+          <h3 class="font-bold text-sm">TOOLS PRODUKSI</h3>
+          <a href="https://aripdevs.github.io/produksi.html" class="text-blue-300 text-xs">TOOLS PRODUKSI : Perhitungan Debit dan Level Resevoar</a>
+        </div>
+
+        <div class="p-4 rounded-xl bg-white/5">
+          <h3 class="font-bold text-sm">Coming Soon</h3>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// FIXED THEME TOGGLE
+const btn = document.getElementById('themeBtn');
+
+btn.addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+  btn.innerText = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+});
+
+function showTab(tab){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.remove('bg-blue-600','text-white');
+  });
+
+  document.getElementById('btn-'+tab).classList.add('bg-blue-600','text-white');
+}
+</script>
+
+</body>
+</html>
