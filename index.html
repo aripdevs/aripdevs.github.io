@@ -1,159 +1,134 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aripdevs</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = { darkMode: 'class' }
-</script>
-
-<style>
-  :root {
-    --glass-bg: rgba(255,255,255,0.15);
-    --glass-border: rgba(255,255,255,0.15);
-    --text-main: #e2e8f0;
-  }
-
-  .dark {
-    --glass-bg: rgba(15,23,42,0.5);
-    --glass-border: rgba(255,255,255,0.08);
-    --text-main: #f1f5f9;
-  }
-
-  body {
-    color: var(--text-main);
-    min-height:100vh;
-    overflow-x:hidden;
-    background: #020617; /* DARK BASE FIX */
-  }
-
-  /* DARKER ANIMATED BG */
-  .animated-bg {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(45deg, #1e3a8a, #4c1d95, #0f172a, #312e81);
-    background-size: 300% 300%;
-    animation: gradientMove 18s ease infinite;
-    filter: blur(80px);
-    opacity: 0.5;
-  }
-
-  @keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-  }
-
-  .tab-content{ display:none; }
-  .tab-content.active{ display:block; animation:fade .4s ease; }
-
-  @keyframes fade {
-    from {opacity:0; transform:translateY(10px);} 
-    to {opacity:1; transform:translateY(0);} 
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arif Rahman - Digital Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --border-color: rgba(0, 0, 0, 0.08);
+        }
+        .dark {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
+<body class="p-4">
 
-<body class="p-4 md:p-6">
+    <div class="max-w-md w-full relative">
+        <button onclick="toggleTheme()" class="absolute -top-12 right-2 p-2 rounded-xl bg-white/50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 118.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
 
-<div class="animated-bg"></div>
+        <div class="glass-card rounded-[2.5rem] p-8 overflow-hidden">
+            
+            <div class="flex gap-2 mb-8 bg-slate-200/50 dark:bg-slate-900/50 p-1.5 rounded-2xl">
+                <button onclick="showTab('arif')" id="btn-arif" class="tab-btn flex-1 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold transition-all shadow-md">Arif</button>
+                <button onclick="showTab('devs')" id="btn-devs" class="tab-btn flex-1 py-2 rounded-xl text-slate-500 dark:text-slate-400 text-sm font-bold transition-all">Devs</button>
+            </div>
 
-<div class="max-w-md mx-auto">
+            <div id="arif" class="tab-content active">
+                <div class="flex items-center gap-6">
+                    <div class="flex-shrink-0">
+                        <div class="w-24 h-24 rounded-full border-4 border-white dark:border-slate-700 shadow-xl overflow-hidden bg-gradient-to-tr from-blue-500 to-emerald-400 p-1">
+                            <img src="https://api.dicebear.com/9.x/avataaars/svg?accessories[]&accessoriesColor[]&accessoriesProbability=100&clothesColor=b1e2ff&clothing=hoodie&eyebrows=defaultNatural&eyes=default&facialHair=beardMedium&facialHairColor=2c1b18,4a312c&skinColor=d08b5b&top=shortFlat,dreads01&seed=Amaya" alt="Profile" class="w-full h-full rounded-full bg-white object-cover">
+                        </div>
+                    </div>
+                    <div class="flex-grow text-right">
+                        <h2 class="text-xl font-black text-slate-800 dark:text-white leading-tight">Arip Rahman, S.Kom</h2>
+                        <p class="text-[10px] uppercase tracking-widest text-blue-500 font-bold mb-3">Software Developer</p>
+                        
+                        <div class="space-y-1">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">ariprahman31@gmail.com</p>
+                            <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">aripdevs.github.io</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-700/50 flex justify-end gap-3">
+                   <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded-full uppercase">AMAZING</span>
+                   <span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-full uppercase">LIMITLESS</span>
+                </div>
+            </div>
 
-  <!-- HEADER -->
-  <div class="glass rounded-2xl p-3 mb-4 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-blue-600/80 rounded-xl flex items-center justify-center text-white font-bold">A</div>
-      <div>
-        <h1 class="text-sm font-bold">aripdevs</h1>
-        <p class="text-[10px] uppercase text-blue-300 font-bold">Business Card</p>
-      </div>
+            <div id="devs" class="tab-content">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Featured Projects</h3>
+                <div class="space-y-3">
+                    <a href="https://aripdevs.github.io/produksi.html" class="block group p-4 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-slate-800 dark:text-white text-sm">Web Tools Produksi</h4>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Kalkulator Debit & Level Reservoar</p>
+                            </div>
+                            <div class="text-blue-500 group-hover:translate-x-1 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+                        <h4 class="font-bold text-slate-400 text-sm">Next Project...</h4>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Coming Soon</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="mt-6 text-center">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Arip Rahman &copy; 2025</p>
+        </footer>
     </div>
 
-    <!-- FIXED TOGGLE -->
-    <button id="themeBtn" class="px-3 py-1.5 rounded-lg text-sm bg-white/10 hover:bg-white/20 transition">
-      🌙
-    </button>
-  </div>
+    <script>
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
 
-  <!-- NAV -->
-  <div class="glass rounded-xl p-1 flex gap-1 mb-4">
-    <button onclick="showTab('main')" id="btn-main" class="tab-btn flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white">Main</button>
-    <button onclick="showTab('prod')" id="btn-prod" class="tab-btn flex-1 py-2 rounded-lg text-xs font-bold">Prod</button>
-  </div>
-
-  <!-- CONTENT -->
-  <div class="glass rounded-2xl p-6">
-
-    <!-- MAIN -->
-    <div id="main" class="tab-content active">
-      <div class="flex items-center gap-4">
-
-        <div class="relative w-20 h-20 flex-shrink-0">
-          <div class="absolute inset-0 bg-blue-400/30 blur-xl rounded-full"></div>
-          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Arip" class="relative w-20 h-20 rounded-full border border-white/20">
-        </div>
-
-        <div class="text-right w-full">
-          <h2 class="font-bold text-lg">Arip Rahman, S.Kom</h2>
-          <p class="text-sm text-slate-300">ariprahman31@gmail.com</p>
-          <p class="text-sm text-slate-300">aripdevs.github.io</p>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- PROD -->
-    <div id="prod" class="tab-content">
-      <div class="space-y-3">
-
-        <div class="p-4 rounded-xl bg-white/5 hover:scale-[1.02] transition">
-          <h3 class="font-bold text-sm">TOOLS PRODUKSI</h3>
-          <a href="https://aripdevs.github.io/produksi.html" class="text-blue-300 text-xs">TOOLS PRODUKSI : Perhitungan Debit dan Level Resevoar</a>
-        </div>
-
-        <div class="p-4 rounded-xl bg-white/5">
-          <h3 class="font-bold text-sm">Coming Soon</h3>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
-</div>
-
-<script>
-// FIXED THEME TOGGLE
-const btn = document.getElementById('themeBtn');
-
-btn.addEventListener('click', () => {
-  document.documentElement.classList.toggle('dark');
-  btn.innerText = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
-});
-
-function showTab(tab){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
-
-  document.querySelectorAll('.tab-btn').forEach(b=>{
-    b.classList.remove('bg-blue-600','text-white');
-  });
-
-  document.getElementById('btn-'+tab).classList.add('bg-blue-600','text-white');
-}
-</script>
-
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                b.classList.add('text-slate-500', 'dark:text-slate-400');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            activeBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
+        }
+    </script>
 </body>
 </html>
