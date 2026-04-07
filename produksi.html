@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPASATU Portal - PTAM Bandarmasih</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #0f172a;
+            --border-color: rgba(0, 0, 0, 0.08);
+        }
+        .dark {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f1f5f9;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        input[type="number"], input[type="text"] {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            outline: none;
+        }
+        .dark input[type="number"], .dark input[type="text"] {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+        input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 6px 4px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        th { font-size: 0.65rem; text-transform: uppercase; color: #64748b; font-weight: 800; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* Estimasi Debit Masuk styles */
+        .est-label { display: block; font-size: 9px; font-weight: 800; color: #64748b; margin-bottom: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+        .est-input-wrap { display: flex; align-items: center; gap: 6px; }
+        .est-input-wrap input[type="number"] { flex: 1; padding: 8px 10px; border-radius: 8px; font-weight: 700; font-size: 15px; text-align: center; }
+        .est-unit { font-size: 11px; color: #64748b; white-space: nowrap; min-width: 50px; }
+        .est-detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--border-color); }
+        .est-detail-row:last-child { border-bottom: none; }
+        .est-detail-label { color: #64748b; }
+        .est-detail-val { font-weight: 700; font-family: monospace; }
+        .est-bar-bg { background: #e2e8f0; border-radius: 4px; height: 10px; overflow: hidden; }
+        .dark .est-bar-bg { background: rgba(255,255,255,0.1); }
+        .est-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+        .est-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 4px 12px; border-radius: 8px; margin-top: 10px; font-weight: 700; }
+        .est-info-note { font-size: 10px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+        
+        /* Range slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            cursor: pointer;
+        }
+        .dark input[type="range"] {
+            background: rgba(255,255,255,0.15);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+        }
+        
+        /* Result highlight */
+        .result-box {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        .result-value {
+            font-size: 32px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Link style */
+        .link-action {
+            color: #2563eb;
+            font-weight: 700;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 10px;
+            transition: color 0.2s;
+        }
+        .link-action:hover {
+            color: #1d4ed8;
+        }
+        .dark .link-action {
+            color: #60a5fa;
+        }
+        .dark .link-action:hover {
+            color: #93c5fd;
+        }
+    </style>
+</head>
+<body class="p-2 md:p-4">
+
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-3 px-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 w-9 h-9 rounded-lg flex items-center justify-center text-white text-lg font-bold shadow-md">I</div>
+                <div>
+                    <h1 class="text-base font-bold leading-none">IPASATU Portal</h1>
+                    <p class="text-[8px] uppercase tracking-wider text-blue-600 font-bold mt-1">PTAM Bandarmasih</p>
+                </div>
+            </div>
+            <button onclick="toggleTheme()" class="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-transform active:scale-90">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 118.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- TAB BUTTONS - Wrap on mobile -->
+        <div class="flex flex-wrap gap-1.5 mb-3">
+            <button onclick="showTab('home')" id="btn-home" class="tab-btn px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold transition-all shadow-sm whitespace-nowrap">Beranda</button>
+            <button onclick="showTab('estimasi')" id="btn-estimasi" class="tab-btn px-4 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all whitespace-nowrap">Estimasi Debit Masuk</button>
+            <button onclick="showTab('debit')" id="btn-debit" class="tab-btn px-4 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all whitespace-nowrap">Debit Transfer</button>
+            <button onclick="showTab('res')" id="btn-res" class="tab-btn px-4 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all whitespace-nowrap">Level Reservoar KUDP</button>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 md:p-5">
+
+            <!-- HOME TAB - Reordered cards -->
+            <div id="home" class="tab-content active text-center py-2">
+                <h2 class="text-sm font-bold mb-4 uppercase tracking-widest text-slate-400">Pilih Alat Operasional</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div onclick="showTab('estimasi')" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center col-span-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-violet-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+                        <h3 class="font-bold text-xs">Estimasi Debit Masuk</h3>
+                    </div>
+                    <div onclick="showTab('debit')" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <h3 class="font-bold text-xs">Debit Pompa Transfer</h3>
+                    </div>
+                    <div onclick="showTab('res')" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        <h3 class="font-bold text-xs">Level Reservoar KUDP</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ESTIMASI DEBIT MASUK TAB -->
+            <div id="estimasi" class="tab-content">
+
+                <!-- Input: Kapasitas Reservoar (WAJIB) -->
+                <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-300 dark:border-amber-700 mb-3">
+                    <label class="est-label text-amber-700 dark:text-amber-400">📦 Kapasitas Reservoar (WAJIB)</label>
+                    <div class="est-input-wrap">
+                        <input type="number" id="estKapasitas" value="1000" min="1" step="1" oninput="hitungEstimasi()">
+                        <span class="est-unit">m³</span>
+                    </div>
+                    <p class="est-info-note text-amber-600 dark:text-amber-400">Volume total reservoar saat penuh 100%</p>
+                </div>
+
+                <!-- Input: Debit Transfer -->
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 mb-3">
+                    <label class="est-label">💧 Debit Transfer / Q_out</label>
+                    <div class="est-input-wrap">
+                        <input type="number" id="estQTransfer" value="1750" min="0" step="1" oninput="hitungEstimasi()">
+                        <span class="est-unit">m³/jam</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-1">
+                        <p class="est-info-note">Debit air yang keluar dari reservoar (transfer ke distribusi)</p>
+                        <span class="link-action" onclick="showTab('debit')">→ Hitung Debit Transfer</span>
+                    </div>
+                </div>
+
+                <!-- Input: Level Awal & Akhir dengan Slider -->
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <label class="est-label">📍 Level Awal</label>
+                        <div class="est-input-wrap mb-2">
+                            <input type="number" id="estLevelAwal" value="50" min="0" max="100" step="0.1" oninput="syncSliderAwal(); hitungEstimasi()">
+                            <span class="est-unit">%</span>
+                        </div>
+                        <input type="range" id="estSliderAwal" min="0" max="100" value="50" step="0.5" class="w-full" oninput="syncInputAwal(); hitungEstimasi()">
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <label class="est-label">🏁 Level Akhir</label>
+                        <div class="est-input-wrap mb-2">
+                            <input type="number" id="estLevelAkhir" value="30" min="0" max="100" step="0.1" oninput="syncSliderAkhir(); hitungEstimasi()">
+                            <span class="est-unit">%</span>
+                        </div>
+                        <input type="range" id="estSliderAkhir" min="0" max="100" value="30" step="0.5" class="w-full" oninput="syncInputAkhir(); hitungEstimasi()">
+                    </div>
+                </div>
+
+                <!-- Input: Durasi Pengamatan -->
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 mb-3">
+                    <label class="est-label">⏱️ Durasi Pengamatan</label>
+                    <div class="est-input-wrap">
+                        <input type="number" id="estDurasi" value="1" min="0.01" step="0.1" oninput="hitungEstimasi()">
+                        <span class="est-unit">jam</span>
+                    </div>
+                    <p class="est-info-note">Waktu dari pengukuran level awal ke level akhir</p>
+                </div>
+
+                <!-- HASIL UTAMA -->
+                <div class="result-box p-4 rounded-xl border border-blue-500 shadow-lg text-center">
+                    <p class="text-[9px] font-bold text-blue-100 uppercase mb-1 tracking-widest">⚡ Estimasi Debit Masuk (Q_in)</p>
+                    <div id="estResultVal" class="result-value text-white">1.550</div>
+                    <div id="estResultUnit" class="text-sm text-blue-200 mt-1 font-semibold">m³/jam</div>
+                    <div id="estBadge" class="est-badge bg-white/20 text-white mt-2"></div>
+                </div>
+
+                <!-- Detail Perhitungan -->
+                <div class="mt-3 p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">📊 Rincian Perhitungan</p>
+                    
+                    <div class="est-detail-row">
+                        <span class="est-detail-label">Perubahan level (ΔL)</span>
+                        <span class="est-detail-val" id="estDLevel">-20.0%</span>
+                    </div>
+                    <div class="est-detail-row">
+                        <span class="est-detail-label">Durasi pengamatan (Δt)</span>
+                        <span class="est-detail-val" id="estDurDisplay">1 jam</span>
+                    </div>
+                    <div class="est-detail-row">
+                        <span class="est-detail-label">Volume perubahan (ΔV)</span>
+                        <span class="est-detail-val" id="estVolChange">-200 m³</span>
+                    </div>
+                    <div class="est-detail-row">
+                        <span class="est-detail-label">Laju perubahan (ΔV/Δt)</span>
+                        <span class="est-detail-val" id="estRateChange">-200 m³/jam</span>
+                    </div>
+                    <div class="est-detail-row">
+                        <span class="est-detail-label">Debit keluar (Q_out)</span>
+                        <span class="est-detail-val" id="estQOut">1.750 m³/jam</span>
+                    </div>
+                    <div class="est-detail-row bg-blue-100 dark:bg-blue-900/30 -mx-3 px-3 py-2">
+                        <span class="est-detail-label font-bold text-blue-700 dark:text-blue-300">Hasil Q_in</span>
+                        <span class="est-detail-val text-blue-700 dark:text-blue-300" id="estQInDetail">1.550 m³/jam</span>
+                    </div>
+
+                    <!-- Rumus -->
+                    <div class="mt-3 p-3 bg-slate-200 dark:bg-slate-800 rounded-lg">
+                        <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 mb-2">📐 RUMUS YANG DIGUNAKAN:</p>
+                        <div class="bg-white dark:bg-slate-700 p-2 rounded text-center">
+                            <p class="text-sm font-mono font-bold text-blue-600 dark:text-blue-400">Q_in = Q_out + (ΔV / Δt)</p>
+                        </div>
+                        <div class="mt-2 text-[10px] text-slate-600 dark:text-slate-400 space-y-1">
+                            <p>• <b>ΔV</b> = (Level Akhir - Level Awal) / 100 × Kapasitas</p>
+                            <p>• <b>Δt</b> = Durasi pengamatan</p>
+                            <p>• <b>Q_out</b> = Debit transfer keluar</p>
+                        </div>
+                    </div>
+
+                    <!-- Bar visual -->
+                    <div class="mt-4">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">📈 Perbandingan Visual</p>
+                        <div class="mb-2">
+                            <div class="flex justify-between text-[10px] text-slate-500 mb-1">
+                                <span>Q_in (Debit Masuk)</span>
+                                <span id="estBarPct" class="font-bold">88.6%</span>
+                            </div>
+                            <div class="est-bar-bg"><div class="est-bar" id="estBar" style="width:88.6%;background:#2563eb;"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] text-slate-500 mb-1">
+                                <span>Q_out (Debit Keluar)</span>
+                                <span class="font-bold">100%</span>
+                            </div>
+                            <div class="est-bar-bg"><div class="est-bar" style="width:100%;background:#94a3b8;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reset Button -->
+                <div class="mt-3 text-center">
+                    <button onclick="resetEstimasi()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                        🔄 Reset ke Nilai Default
+                    </button>
+                </div>
+
+            </div>
+            <!-- END ESTIMASI TAB -->
+
+            <!-- DEBIT TAB -->
+            <div id="debit" class="tab-content">
+                <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                    <table>
+                        <thead class="bg-slate-50 dark:bg-slate-900/50">
+                            <tr>
+                                <th class="w-8">No</th>
+                                <th>Frekuensi (Hz)</th>
+                                <th>Debit Awal (m³/h)</th>
+                                <th class="w-20">Hasil</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debitTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="mt-3 p-3 bg-slate-100 dark:bg-slate-900/40 rounded-xl flex flex-col items-center border border-slate-200 dark:border-slate-700">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Debit Akumulasi</span>
+                    <div id="totalDebitDisplay" class="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono">0.00</div>
+                    <div class="flex items-center gap-3 mt-2">
+                        <button onclick="resetDebit()" class="text-[9px] font-bold text-slate-500 underline uppercase tracking-tighter">Setel Ulang</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button onclick="gunakanSebagaiQout()" class="text-[9px] font-bold text-blue-600 dark:text-blue-400 underline uppercase tracking-tighter">Gunakan sebagai Q_out →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESERVOAR TAB -->
+            <div id="res" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 tracking-wider uppercase">Level Luar (1-100)</label>
+                        <input type="number" id="rsvInput" class="w-full text-2xl font-black p-1.5 rounded-lg text-center mb-2" value="1">
+                        <input type="range" id="rsvSlider" min="1" max="100" class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 tracking-wider uppercase">Level KUDP (1-75)</label>
+                        <input type="number" id="kudpInput" class="w-full text-2xl font-black p-1.5 rounded-lg text-center mb-2" value="1">
+                        <input type="range" id="kudpSlider" min="1" max="75" class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                    </div>
+                </div>
+                <div class="mt-3 p-3 bg-blue-600 rounded-xl text-center shadow-md border border-blue-500">
+                    <p class="text-[8px] font-bold text-blue-100 uppercase mb-0.5 tracking-widest">Nilai KUDP Real (Raw)</p>
+                    <div id="kudpRaw" class="text-2xl font-black text-white">0.75</div>
+                    <button id="copyBtn" class="mt-1 text-[9px] font-bold text-white/80 hover:text-white underline uppercase">Salin Data</button>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="mt-4 text-center border-t border-slate-200 dark:border-slate-800 pt-3 pb-4 px-2">
+            <div class="text-[9px] font-bold text-slate-700 dark:text-slate-300 mb-2">
+                PTAM Bandarmasih @2025 by AripR (214 07 525)
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-900/30 p-2 rounded-lg text-[8px] leading-tight text-slate-500 dark:text-slate-400 uppercase text-justify md:text-center">
+                <span class="text-red-500 font-bold">Disclaimer:</span> Perhitungan berdasarkan perkiraan hukum affinity. Segala kesalahan atau kerugian penggunaan alat ini sepenuhnya tanggung jawab user. Validasi data dengan alat ukur aktual tetap disarankan.
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function toggleTheme() { document.documentElement.classList.toggle('dark'); }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                b.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-700');
+            });
+            document.getElementById(tabId).classList.add('active');
+            const btn = document.getElementById('btn-' + tabId);
+            btn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+            btn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-700');
+        }
+
+        // ── DEBIT ──
+        const defaultBase = [500, 250, 500, 500, 1000];
+        function initDebitTable() {
+            const body = document.getElementById('debitTableBody');
+            for (let i = 1; i <= 5; i++) {
+                body.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                        <td class="text-[9px] font-bold text-slate-400">${i}</td>
+                        <td class="px-1 py-1"><input type="number" id="f${i}" value="50" oninput="hitungDebit()" class="w-full p-1.5 text-center rounded-md font-bold text-xs"></td>
+                        <td class="px-1 py-1"><input type="number" id="b${i}" value="${defaultBase[i-1]}" oninput="hitungDebit()" class="w-full p-1.5 text-center rounded-md font-bold text-xs"></td>
+                        <td id="d${i}" class="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs italic">0.00</td>
+                    </tr>
+                `;
+            }
+            hitungDebit();
+        }
+
+        function hitungDebit() {
+            let total = 0;
+            for (let i = 1; i <= 5; i++) {
+                let fVal = document.getElementById('f'+i);
+                let f = parseFloat(fVal.value) || 0;
+                let b = parseFloat(document.getElementById('b'+i).value) || 0;
+                if(f > 50) { f = 50; fVal.value = 50; }
+                let hasil = b * (f / 50);
+                document.getElementById('d'+i).innerText = hasil.toFixed(2);
+                total += hasil;
+            }
+            document.getElementById('totalDebitDisplay').innerText = total.toFixed(2);
+        }
+
+        function resetDebit() {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('f'+i).value = 50;
+                document.getElementById('b'+i).value = defaultBase[i-1];
+            }
+            hitungDebit();
+        }
+
+        // Fungsi untuk menggunakan total debit sebagai Q_out di tab Estimasi
+        function gunakanSebagaiQout() {
+            const total = parseFloat(document.getElementById('totalDebitDisplay').innerText) || 0;
+            document.getElementById('estQTransfer').value = Math.round(total);
+            hitungEstimasi();
+            showTab('estimasi');
+        }
+
+        // ── RESERVOAR ──
+        const mapping=[null,1,2,2,3,4,4,5,6,7,8,8,9,10,10,11,12,13,14,14,15,16,16,17,18,19,20,20,21,22,22,23,24,25,26,26,27,28,28,29,30,31,32,32,33,34,34,35,36,37,38,38,39,40,40,41,42,43,44,44,45,46,46,47,48,49,50,50,51,52,52,53,54,55,56,56,57,58,58,59,60,61,62,62,63,64,64,65,66,67,68,68,69,70,70,71,72,73,74,74,75];
+        const rIn = document.getElementById('rsvInput'), rSl = document.getElementById('rsvSlider');
+        const kIn = document.getElementById('kudpInput'), kSl = document.getElementById('kudpSlider');
+        const kRaw = document.getElementById('kudpRaw');
+
+        function updateFromRsv(val) {
+            let s = Math.min(Math.max(parseInt(val) || 1, 1), 100);
+            rIn.value = s; rSl.value = s;
+            kIn.value = mapping[s]; kSl.value = mapping[s];
+            kRaw.innerText = (s * 0.75).toFixed(2);
+        }
+
+        function updateFromKudp(val) {
+            let k = Math.min(Math.max(parseInt(val) || 1, 1), 75);
+            kIn.value = k; kSl.value = k;
+            let idx = mapping.findIndex(m => m === k);
+            if(idx === -1) idx = 1;
+            rIn.value = idx; rSl.value = idx;
+            kRaw.innerText = (idx * 0.75).toFixed(2);
+        }
+
+        rIn.oninput = (e) => updateFromRsv(e.target.value);
+        rSl.oninput = (e) => updateFromRsv(e.target.value);
+        kIn.oninput = (e) => updateFromKudp(e.target.value);
+        kSl.oninput = (e) => updateFromKudp(e.target.value);
+
+        document.getElementById('copyBtn').onclick = async function() {
+            const text = `RSV: ${rIn.value} | KUDP: ${kIn.value} (Raw: ${kRaw.innerText})`;
+            await navigator.clipboard.writeText(text);
+            const ori = this.innerText;
+            this.innerText = "TERSALIN";
+            setTimeout(() => this.innerText = ori, 1200);
+        };
+
+        // ══════════════════════════════════════════════════════════════
+        // ══  ESTIMASI DEBIT MASUK  ══
+        // ══════════════════════════════════════════════════════════════
+        
+        // Sync slider dengan input
+        function syncSliderAwal() {
+            const val = parseFloat(document.getElementById('estLevelAwal').value);
+            if (!isNaN(val)) {
+                document.getElementById('estSliderAwal').value = Math.max(0, Math.min(100, val));
+            }
+        }
+        function syncInputAwal() {
+            document.getElementById('estLevelAwal').value = document.getElementById('estSliderAwal').value;
+        }
+        function syncSliderAkhir() {
+            const val = parseFloat(document.getElementById('estLevelAkhir').value);
+            if (!isNaN(val)) {
+                document.getElementById('estSliderAkhir').value = Math.max(0, Math.min(100, val));
+            }
+        }
+        function syncInputAkhir() {
+            document.getElementById('estLevelAkhir').value = document.getElementById('estSliderAkhir').value;
+        }
+
+        // Format angka dengan pemisah ribuan
+        function formatNumber(num, decimals = 0) {
+            return num.toLocaleString('id-ID', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        // Fungsi utama perhitungan
+        function hitungEstimasi() {
+            // Ambil semua nilai input
+            const kapasitas = parseFloat(document.getElementById('estKapasitas').value) || 0;
+            const qTransfer = parseFloat(document.getElementById('estQTransfer').value) || 0;
+            const levelAwal = parseFloat(document.getElementById('estLevelAwal').value) || 0;
+            const levelAkhir = parseFloat(document.getElementById('estLevelAkhir').value) || 0;
+            const durasi = parseFloat(document.getElementById('estDurasi').value) || 0;
+
+            // Clamp level ke range 0-100
+            const levelAwalClamped = Math.max(0, Math.min(100, levelAwal));
+            const levelAkhirClamped = Math.max(0, Math.min(100, levelAkhir));
+
+            // ═══════════════════════════════════════════
+            // PERHITUNGAN UTAMA
+            // ═══════════════════════════════════════════
+            
+            // 1. Hitung perubahan level (dalam persen)
+            const deltaLevel = levelAkhirClamped - levelAwalClamped;
+            
+            // 2. Hitung volume perubahan (dalam m³)
+            const deltaVolume = (deltaLevel / 100) * kapasitas;
+            
+            // 3. Hitung laju perubahan volume (dalam m³/jam)
+            let rateChange = 0;
+            if (durasi > 0) {
+                rateChange = deltaVolume / durasi;
+            }
+            
+            // 4. Hitung Q_in (Debit Masuk)
+            let qIn = qTransfer + rateChange;
+            
+            // Q_in tidak boleh negatif
+            if (qIn < 0) qIn = 0;
+
+            // ═══════════════════════════════════════════
+            // UPDATE TAMPILAN HASIL
+            // ═══════════════════════════════════════════
+            
+            const resVal = document.getElementById('estResultVal');
+            const resUnit = document.getElementById('estResultUnit');
+            const badge = document.getElementById('estBadge');
+
+            // Validasi input
+            if (kapasitas <= 0) {
+                resVal.textContent = '—';
+                resUnit.textContent = 'Masukkan kapasitas reservoar';
+                badge.textContent = '⚠️ Kapasitas harus > 0';
+                badge.style.background = 'rgba(239, 68, 68, 0.3)';
+                return;
+            }
+            if (durasi <= 0) {
+                resVal.textContent = '—';
+                resUnit.textContent = 'Masukkan durasi pengamatan';
+                badge.textContent = '⚠️ Durasi harus > 0';
+                badge.style.background = 'rgba(239, 68, 68, 0.3)';
+                return;
+            }
+
+            // Tampilkan hasil Q_in
+            resVal.textContent = formatNumber(qIn, 0);
+            resUnit.textContent = 'm³/jam';
+
+            // Update badge berdasarkan kondisi
+            let barColor = '#2563eb';
+            if (Math.abs(deltaLevel) < 0.1) {
+                badge.textContent = '↔️ Level stabil — Q_in ≈ Q_out';
+                badge.style.background = 'rgba(255,255,255,0.2)';
+                barColor = '#94a3b8';
+            } else if (deltaLevel > 0) {
+                badge.textContent = '📈 Level naik — Q_in > Q_out (surplus ' + formatNumber(rateChange, 0) + ' m³/jam)';
+                badge.style.background = 'rgba(34, 197, 94, 0.3)';
+                barColor = '#22c55e';
+            } else {
+                badge.textContent = '📉 Level turun — Q_in < Q_out (defisit ' + formatNumber(Math.abs(rateChange), 0) + ' m³/jam)';
+                badge.style.background = 'rgba(239, 68, 68, 0.3)';
+                barColor = '#ef4444';
+            }
+
+            // ═══════════════════════════════════════════
+            // UPDATE DETAIL PERHITUNGAN
+            // ═══════════════════════════════════════════
+            
+            document.getElementById('estDLevel').textContent = 
+                (deltaLevel >= 0 ? '+' : '') + formatNumber(deltaLevel, 1) + '%';
+            
+            document.getElementById('estDurDisplay').textContent = 
+                formatNumber(durasi, 2) + ' jam';
+            
+            document.getElementById('estVolChange').textContent = 
+                (deltaVolume >= 0 ? '+' : '') + formatNumber(deltaVolume, 0) + ' m³';
+            
+            document.getElementById('estRateChange').textContent = 
+                (rateChange >= 0 ? '+' : '') + formatNumber(rateChange, 0) + ' m³/jam';
+            
+            document.getElementById('estQOut').textContent = 
+                formatNumber(qTransfer, 0) + ' m³/jam';
+            
+            document.getElementById('estQInDetail').textContent = 
+                formatNumber(qIn, 0) + ' m³/jam';
+
+            // ═══════════════════════════════════════════
+            // UPDATE BAR VISUAL
+            // ═══════════════════════════════════════════
+            
+            const bar = document.getElementById('estBar');
+            bar.style.background = barColor;
+            
+            let pct = 0;
+            if (qTransfer > 0) {
+                pct = (qIn / qTransfer) * 100;
+            } else if (qIn > 0) {
+                pct = 100;
+            }
+            
+            const barWidth = Math.min(Math.max(pct, 0), 150);
+            bar.style.width = barWidth + '%';
+            document.getElementById('estBarPct').textContent = formatNumber(pct, 1) + '%';
+        }
+
+        function resetEstimasi() {
+            document.getElementById('estKapasitas').value = 1000;
+            document.getElementById('estQTransfer').value = 1750;
+            document.getElementById('estLevelAwal').value = 50;
+            document.getElementById('estLevelAkhir').value = 30;
+            document.getElementById('estSliderAwal').value = 50;
+            document.getElementById('estSliderAkhir').value = 30;
+            document.getElementById('estDurasi').value = 1;
+            hitungEstimasi();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // INIT
+        // ══════════════════════════════════════════════════════════════
+        initDebitTable();
+        hitungEstimasi();
+    </script>
+</body>
+</html>
