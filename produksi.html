@@ -217,10 +217,10 @@
                     <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
                         <label class="est-label">🏁 Level Akhir</label>
                         <div class="est-input-wrap mb-2">
-                            <input type="number" id="estLevelAkhir" value="30" min="0" max="100" step="0.1" oninput="syncSliderAkhir(); hitungEstimasi()">
+                            <input type="number" id="estLevelAkhir" value="50" min="0" max="100" step="0.1" oninput="syncSliderAkhir(); hitungEstimasi()">
                             <span class="est-unit">%</span>
                         </div>
-                        <input type="range" id="estSliderAkhir" min="0" max="100" value="30" step="0.5" class="w-full" oninput="syncInputAkhir(); hitungEstimasi()">
+                        <input type="range" id="estSliderAkhir" min="0" max="100" value="50" step="0.5" class="w-full" oninput="syncInputAkhir(); hitungEstimasi()">
                     </div>
                 </div>
 
@@ -626,9 +626,9 @@
             document.getElementById('estKapasitas').value = 1000;
             document.getElementById('estQTransfer').value = 1750;
             document.getElementById('estLevelAwal').value = 50;
-            document.getElementById('estLevelAkhir').value = 30;
+            document.getElementById('estLevelAkhir').value = 50;
             document.getElementById('estSliderAwal').value = 50;
-            document.getElementById('estSliderAkhir').value = 30;
+            document.getElementById('estSliderAkhir').value = 50;
             document.getElementById('estDurasi').value = 1;
             hitungEstimasi();
         }
