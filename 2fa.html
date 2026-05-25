@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2FA Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-main: #0f172a;
+      --border-color: rgba(0, 0, 0, 0.08);
+    }
+    .dark {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text-main: #f1f5f9;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+    }
+
+    textarea, select {
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dark textarea, .dark select {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+    }
+    textarea:focus, select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .dark select option {
+      background: #1e293b;
+      color: #f1f5f9;
+    }
+
+    /* Progress bar */
+    .bar-track {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .dark .bar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #1d4ed8);
+      border-radius: 999px;
+      transition: width 0.2s linear;
+    }
+
+    /* Code display */
+    .code-display {
+      font-size: clamp(38px, 12vw, 54px);
+      font-weight: 900;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.14em;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    /* Error box */
+    .error-box {
+      display: none;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-top: 8px;
+    }
+    .dark .error-box {
+      background: rgba(220, 38, 38, 0.2);
+      border-color: rgba(220, 38, 38, 0.3);
+      color: #fca5a5;
+    }
+  </style>
+</head>
+<body class="p-2 md:p-4">
+
+  <div class="max-w-md mx-auto">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-3 px-2">
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-600 w-9 h-9 rounded-lg flex items-center justify-center text-white text-lg font-bold shadow-md">2FA</div>
+        <div>
+          <h1 class="text-base font-bold leading-none">2FA Generator</h1>
+          <p class="text-[8px] uppercase tracking-wider text-blue-600 font-bold mt-1">TOTP Authenticator</p>
+        </div>
+      </div>
+      <button onclick="toggleTheme()" class="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-transform active:scale-90">
+        <!-- Sun icon (dark mode) -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+        <!-- Moon icon (light mode) -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 118.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- MAIN CARD -->
+    <div class="glass-card rounded-2xl p-4 md:p-5">
+
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+        Generator TOTP asli berbasis secret key dan waktu saat ini. Kode dibuat lokal di browser, bukan random.
+      </p>
+
+      <!-- SECRET INPUT -->
+      <div class="mb-1">
+        <label class="block text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Secret Key 2FA</label>
+        <textarea
+          id="secret"
+          rows="3"
+          placeholder="Contoh: JBSWY3DPEHPK3PXP"
+          spellcheck="false"
+          autocomplete="off"
+          class="w-full rounded-xl px-3 py-2.5 text-sm font-mono uppercase tracking-widest resize-y"
+        ></textarea>
+        <div id="error" class="error-box"></div>
+      </div>
+
+      <!-- SETTINGS ROW -->
+      <div class="grid grid-cols-2 gap-3 mt-3">
+        <div>
+          <label class="block text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Digit</label>
+          <select id="digits" class="w-full rounded-xl px-3 py-2.5 text-sm font-bold">
+            <option value="6" selected>6 digit</option>
+            <option value="8">8 digit</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Refresh</label>
+          <select id="period" class="w-full rounded-xl px-3 py-2.5 text-sm font-bold">
+            <option value="30" selected>30 detik</option>
+            <option value="60">60 detik</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- RESULT BOX -->
+      <div class="mt-4 rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+        <div class="px-5 pt-5 pb-4 text-center">
+          <p class="text-[10px] font-extrabold uppercase tracking-[0.15em] text-blue-200 mb-3">Kode 2FA</p>
+          <div id="code" class="code-display text-white" aria-live="polite">------</div>
+          <p id="meta" class="text-blue-200 text-xs font-bold mt-3">Masukkan secret key.</p>
+          <div class="mt-3 bar-track">
+            <div id="progress" class="bar-fill" style="background: rgba(255,255,255,0.5);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button
+          id="copy"
+          class="py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-extrabold transition-all shadow-sm"
+        >Salin</button>
+        <button
+          id="clear"
+          class="py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-200 text-sm font-extrabold transition-all border border-slate-200 dark:border-slate-700"
+        >Reset</button>
+      </div>
+
+      <!-- NOTE -->
+      <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">
+        Default umum: SHA-1, 6 digit, 30 detik. Kode valid hanya jika secret benar dan jam perangkat sinkron.
+      </p>
+
+    </div>
+  </div>
+
+  <script>
+    // ── THEME TOGGLE ──────────────────────────────────────────────────────────
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    }
+    if (localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // ── 2FA LOGIC (sama persis dengan original) ───────────────────────────────
+    const secretInput = document.getElementById("secret");
+    const digitsInput = document.getElementById("digits");
+    const periodInput = document.getElementById("period");
+    const codeEl     = document.getElementById("code");
+    const metaEl     = document.getElementById("meta");
+    const progressEl = document.getElementById("progress");
+    const errorEl    = document.getElementById("error");
+    const copyBtn    = document.getElementById("copy");
+    const clearBtn   = document.getElementById("clear");
+
+    function cleanSecret(value) {
+      return value.toUpperCase().replace(/\s+/g, "").replace(/-/g, "").replace(/=+$/g, "");
+    }
+
+    function base32ToBytes(base32) {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+      let bits = "";
+      const bytes = [];
+
+      if (!base32) throw new Error("Secret key masih kosong.");
+      if (!/^[A-Z2-7]+$/.test(base32)) {
+        throw new Error("Secret harus Base32: hanya huruf A-Z dan angka 2-7.");
+      }
+
+      for (const char of base32) {
+        const value = alphabet.indexOf(char);
+        bits += value.toString(2).padStart(5, "0");
+      }
+      for (let i = 0; i + 8 <= bits.length; i += 8) {
+        bytes.push(parseInt(bits.slice(i, i + 8), 2));
+      }
+      return new Uint8Array(bytes);
+    }
+
+    function counterToBytes(counter) {
+      const buffer = new ArrayBuffer(8);
+      const view = new DataView(buffer);
+      view.setUint32(0, Math.floor(counter / 0x100000000), false);
+      view.setUint32(4, counter >>> 0, false);
+      return buffer;
+    }
+
+    async function generateTOTP(secret, period, digits) {
+      const epoch = Math.floor(Date.now() / 1000);
+      const counter = Math.floor(epoch / period);
+      const keyBytes = base32ToBytes(secret);
+
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+      );
+
+      const hmac = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, counterToBytes(counter)));
+      const offset = hmac[hmac.length - 1] & 0x0f;
+      const binary =
+        ((hmac[offset]     & 0x7f) << 24) |
+        ((hmac[offset + 1] & 0xff) << 16) |
+        ((hmac[offset + 2] & 0xff) << 8)  |
+        ( hmac[offset + 3] & 0xff);
+
+      return String(binary % 10 ** digits).padStart(digits, "0");
+    }
+
+    function showError(message) {
+      errorEl.textContent = message;
+      errorEl.style.display = "block";
+      codeEl.textContent = "------";
+      metaEl.textContent = "Kode belum tersedia.";
+    }
+
+    function hideError() {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+
+    async function update() {
+      const secret  = cleanSecret(secretInput.value);
+      const period  = Number(periodInput.value);
+      const digits  = Number(digitsInput.value);
+      const now     = Math.floor(Date.now() / 1000);
+      const remaining = period - (now % period);
+      const used      = period - remaining;
+
+      progressEl.style.width = `${(used / period) * 100}%`;
+
+      if (!secret) {
+        hideError();
+        codeEl.textContent = "------";
+        metaEl.textContent = "Masukkan secret key.";
+        return;
+      }
+
+      try {
+        const otp = await generateTOTP(secret, period, digits);
+        hideError();
+        codeEl.textContent = otp;
+        metaEl.textContent = `Refresh dalam ${remaining} detik`;
+      } catch (err) {
+        showError(err.message || "Gagal membuat kode TOTP.");
+      }
+    }
+
+    copyBtn.addEventListener("click", async () => {
+      const code = codeEl.textContent.trim();
+      if (!/^\d+$/.test(code)) return;
+      await navigator.clipboard.writeText(code);
+      copyBtn.textContent = "Tersalin ✓";
+      setTimeout(() => (copyBtn.textContent = "Salin"), 900);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      secretInput.value = "";
+      update();
+      secretInput.focus();
+    });
+
+    secretInput.addEventListener("input", update);
+    digitsInput.addEventListener("change", update);
+    periodInput.addEventListener("change", update);
+
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
