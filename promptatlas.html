@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Affiliate Prompt Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-main: #0f172a;
+      --border-color: rgba(0, 0, 0, 0.08);
+    }
+    .dark {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text-main: #f1f5f9;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Input & textarea */
+    input[type="text"],
+    textarea,
+    select {
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dark input[type="text"],
+    .dark textarea,
+    .dark select {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Custom select arrow */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+    .dark select option {
+      background: #1e293b;
+      color: #f1f5f9;
+    }
+
+    textarea {
+      min-height: 420px;
+      resize: vertical;
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Position badge */
+    .position-badge {
+      padding: 8px 12px;
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #3b82f6;
+      line-height: 1.6;
+    }
+    .dark .position-badge {
+      background: rgba(15, 23, 42, 0.5);
+      border-color: rgba(255,255,255,0.1);
+      color: #93c5fd;
+    }
+    .badge-label {
+      font-weight: 800;
+      color: #94a3b8;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .position-badge.random-mode {
+      border-color: #7c3aed;
+      color: #8b5cf6;
+    }
+    .dark .position-badge.random-mode {
+      color: #c4b5fd;
+    }
+
+    /* Char counter */
+    .char-counter {
+      text-align: right;
+      font-size: 11px;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+      margin-top: 4px;
+    }
+    .char-counter span {
+      color: #3b82f6;
+      font-weight: 700;
+    }
+    .dark .char-counter span {
+      color: #93c5fd;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #10b981;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s ease;
+      pointer-events: none;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      textarea { min-height: 320px; }
+    }
+  </style>
+</head>
+<body class="p-2 md:p-4">
+
+  <div class="max-w-5xl mx-auto">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-3 px-2">
+      <div class="flex items-center gap-3">
+        <div class="bg-violet-600 w-9 h-9 rounded-lg flex items-center justify-center text-white text-lg font-bold shadow-md">🐱</div>
+        <div>
+          <h1 class="text-base font-bold leading-none">Atlas Affiliate Prompt Generator</h1>
+          <p class="text-[8px] uppercase tracking-wider text-violet-500 font-bold mt-1">Maine Coon Mascot · AI Prompts</p>
+        </div>
+      </div>
+      <button onclick="toggleTheme()" class="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-transform active:scale-90">
+        <!-- Sun icon (dark mode) -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+        <!-- Moon icon (light mode) -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 118.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="glass-card rounded-2xl p-4 md:p-6 space-y-4">
+
+      <!-- SUBTITLE -->
+      <p class="text-xs text-slate-500 dark:text-slate-400 -mt-1">Enter product name once, then copy the ready-to-use master image and video prompts.</p>
+
+      <!-- PRODUCT NAME -->
+      <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-300 dark:border-amber-700">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-2">📦 Product Name</label>
+        <input
+          id="productName"
+          type="text"
+          placeholder="Example: Master Rem Racing, Paket CVT, Gas Spontan"
+          class="w-full rounded-lg px-3 py-2 text-sm font-medium"
+        />
+        <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-1 italic">The product name will be inserted automatically into both prompts.</p>
+      </div>
+
+      <!-- ATLAS POSITION -->
+      <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">🐾 Atlas Cat Position</label>
+        <div class="flex gap-2 items-center">
+          <select id="atlasPositionSelect" class="flex-1 rounded-lg px-3 py-2 text-sm font-medium">
+            <option value="random">🎲 Random — pick a position automatically each time</option>
+            <option value="0">1. Lying — front paws stretched on workshop floor</option>
+            <option value="1">2. Loaf — relaxed loaf position on concrete floor</option>
+            <option value="2">3. Upright — supervising near workstation</option>
+            <option value="3">4. Walking — strolling through the workshop background</option>
+            <option value="4">5. Platform — sitting proudly on a low platform</option>
+            <option value="5">6. Patrol pause — pausing mid-workshop during patrol</option>
+            <option value="6">7. Waiting — near mechanic's work area, waiting</option>
+            <option value="7">8. Resting — watching product with quiet curiosity</option>
+            <option value="8">9. Settling — beside workshop equipment after wandering</option>
+            <option value="9">10. Companion — relaxed and attentive near workspace</option>
+          </select>
+          <button
+            class="btn-reroll px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-all shadow-sm whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
+            id="rerollBtn"
+            onclick="reroll()"
+            title="Re-roll random position"
+          >🎲 Re-roll</button>
+        </div>
+        <div class="position-badge random-mode mt-2" id="positionBadge">
+          <span class="badge-label">Active Position</span>
+          <span id="positionBadgeText">Will be picked randomly on each update</span>
+        </div>
+      </div>
+
+      <!-- PROMPTS ROW -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- IMAGE PROMPT -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-500">🖼️ Master Prompt Image</label>
+            <button
+              onclick="copyPrompt('imagePrompt')"
+              class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
+            >Copy</button>
+          </div>
+          <textarea id="imagePrompt" readonly class="w-full rounded-lg px-3 py-2"></textarea>
+          <div class="char-counter">Characters: <span id="imageCharCount">0</span></div>
+        </div>
+
+        <!-- VIDEO PROMPT -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-500">🎬 Master Prompt Video</label>
+            <button
+              onclick="copyPrompt('videoPrompt')"
+              class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
+            >Copy</button>
+          </div>
+          <textarea id="videoPrompt" readonly class="w-full rounded-lg px-3 py-2"></textarea>
+          <div class="char-counter">Characters: <span id="videoCharCount">0</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">✅ Copied!</div>
+
+  <script>
+    // ── Theme toggle (same pattern as produksi.html) ──────────────────────────
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    }
+    if (localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // ── Original atlas.html JS (unchanged) ────────────────────────────────────
+    const productInput = document.getElementById('productName');
+    const imagePromptEl = document.getElementById('imagePrompt');
+    const videoPromptEl = document.getElementById('videoPrompt');
+    const toast = document.getElementById('toast');
+
+    const atlasPositions = [
+      'lying majestically on the workshop floor with his front paws stretched forward, appearing completely at home in the space',
+      'sitting in a relaxed loaf position on the concrete floor, calmly observing the workshop activity around him',
+      "sitting upright near the workstation as if quietly supervising the day's work with calm confidence",
+      'slowly walking through the workshop in the background, naturally blending into the environment as part of the daily routine',
+      'sitting proudly on a low platform, calmly overlooking the workshop environment with quiet authority',
+      'pausing naturally in the middle of the workshop as if taking a brief break during his usual patrol of the space',
+      "sitting patiently near the mechanic's work area as though waiting for the next task to begin",
+      'resting comfortably on the floor while casually watching the product with quiet curiosity and familiarity',
+      'settling down comfortably beside workshop equipment as if he has just finished wandering through the garage',
+      'positioned naturally near the workspace, relaxed and attentive, like a longtime companion who spends every day in the workshop'
+    ];
+
+    const atlasSelect = document.getElementById('atlasPositionSelect');
+    const positionBadge = document.getElementById('positionBadge');
+    const positionBadgeText = document.getElementById('positionBadgeText');
+    const rerollBtn = document.getElementById('rerollBtn');
+    const imageCharCount = document.getElementById('imageCharCount');
+    const videoCharCount = document.getElementById('videoCharCount');
+
+    function getRandomAtlasPosition() {
+      return atlasPositions[Math.floor(Math.random() * atlasPositions.length)];
+    }
+
+    function getSelectedAtlasPosition() {
+      const val = atlasSelect.value;
+      if (val === 'random') {
+        return getRandomAtlasPosition();
+      }
+      return atlasPositions[parseInt(val)];
+    }
+
+    function updatePositionBadge() {
+      const val = atlasSelect.value;
+      if (val === 'random') {
+        positionBadge.className = 'position-badge random-mode';
+        positionBadgeText.textContent = 'Will be picked randomly on each update';
+        rerollBtn.disabled = false;
+      } else {
+        positionBadge.className = 'position-badge';
+        positionBadgeText.textContent = atlasPositions[parseInt(val)];
+        rerollBtn.disabled = true;
+      }
+    }
+
+    function reroll() {
+      if (atlasSelect.value !== 'random') return;
+      updatePrompts();
+    }
+
+    let currentAtlasPosition = getSelectedAtlasPosition();
+
+    function cleanProductName() {
+      const value = productInput.value.trim();
+      return value || '[PRODUCT NAME]';
+    }
+
+    function buildImagePrompt(productName) {
+      return `Use the uploaded reference image as the primary source. Preserve 100% of the original product identity, packaging, logo placement, typography, colors, proportions, labels, stickers, branding, and all visual details exactly as shown in the reference image. Do not modify, redesign, replace, or reinterpret any element of the product.\n\nA realistic adult male hand is holding the original motorcycle product (${productName}) box directly in front of the camera. The product remains inside its original packaging and faces the camera clearly. The product is the absolute center of attention and occupies approximately 70% of the frame. Focus is locked on the product at all times.\n\nInclude the brand mascot Atlas, a giant purebred Maine Coon cat. Atlas has a luxurious silver smoke gray coat, bright emerald green eyes, black lynx ear tufts, a majestic lion-like neck mane, a massive fluffy tail with dark charcoal rings, thick feathered paws, and a broad noble face. Atlas is exceptionally large, approximately 90 cm tall while sitting. Atlas must remain identical in every generation with the same fur color, eye color, facial structure, tail markings, body proportions, fur density, and overall appearance. Photorealistic, ultra-detailed fur texture, premium show-quality Maine Coon.\n\nAtlas is positioned naturally in the background, naturally visible and in focus, ${currentAtlasPosition}. Atlas appears relaxed and familiar with the environment, as if he spends every day in the workshop. His pose feels natural and candid rather than staged, occasionally looking toward the product with a calm, intelligent, and approving expression.\n\nThe setting is a real motorcycle workshop during daytime, photographed casually on a Samsung Galaxy S21 Ultra. Available light only, no flash, midday natural lighting. Flat soft shadows, low contrast, even ambient light throughout the frame. The workshop feels genuinely used and lived-in, with realistic details such as slightly worn hand tools, hanging wrenches, spare parts shelves, tire stacks, plastic oil containers, workshop stickers, compressors, workbenches, and a few scooters waiting for service. A Honda Vario, Beat, Scoopy, NMAX, or Aerox may be partially visible in the background, background fully in focus.\n\nThe environment should resemble a trusted local Indonesian motorcycle workshop rather than a luxury garage, studio set, or futuristic workspace. Nothing appears overly perfect or artificially arranged. Small imperfections, subtle clutter, realistic wear, light dust, grease marks, and naturally organized tools create an authentic atmosphere. The workshop should feel busy, believable, and familiar to motorcycle enthusiasts.\n\nRaw candid amateur photo, shot on Samsung Galaxy S21 Ultra, 24mm lens, f/8, ISO 200, 1/120s, no flash, available light only, flat soft shadows, background fully in focus, low contrast, slight JPEG compression artifacts, natural sensor noise, minor chromatic aberration, slight color fringing, no AI enhancement, no beauty filter, no HDR, no tone mapping, no post-processing, casual snapshot aesthetic, disposable camera vibe, unedited, unpolished, imperfect everyday photo, boring reality, tiny imperfections, real-world atmosphere. The image should look like a real person casually took it on their phone, not an AI-generated render.\n\nStrong visual hierarchy:\n\n1. Product box = primary focus\n\n2. Atlas the Maine Coon = secondary curiosity trigger\n\n3. Real motorcycle workshop environment = supporting atmosphere\n\nCandid affiliate snapshot, natural amateur composition, authentic shadows, realistic skin texture, sharp product focus, natural visual storytelling, realistic smartphone camera aesthetics, slight natural grain, everyday photo quality.\n\nAtlas must never distract from the product. Atlas functions as a recognizable brand mascot and curiosity element only.\n\nReference Image Fidelity Priority: Maximum. The product must remain identical to the uploaded reference image in every detail.\n\nCharacter Consistency Lock: Atlas must always appear as the exact same giant Maine Coon cat with identical silver smoke gray fur, emerald green eyes, black lynx ear tufts, lion-like neck mane, broad noble face, dark-ringed fluffy tail, calm expression, and premium show-quality appearance. No variation in breed, fur pattern, eye color, size, facial structure, or overall identity is allowed across generations.\n\nNegative Prompt: altered packaging, incorrect logo, modified text, changed colors, blurry product, duplicate cats, multiple animals, distorted fur, aggressive cat, unrealistic proportions, cartoon style, overexposed lighting, floating objects, AI artifacts, warped text, extra hands, cropped product, luxury garage, futuristic workshop, cyberpunk environment, neon lighting, sci-fi garage, showroom atmosphere, perfect symmetry, CGI render look, 3D render style, AI-generated workshop, hyper-polished environment, unrealistic lighting, concept art, futuristic machinery, luxury supercar garage, sterile workshop, unrealistically clean workspace, HDR overprocessing, excessive cinematic effects, fake bokeh, artificial depth of field, plastic-looking surfaces, over-sharpened details, AI enhancement, beauty filter, tone mapping, studio lighting, dramatic lighting, cinematic lighting, bokeh blur, background blur, shallow depth of field.`;
+    }
+
+    function buildVideoPrompt(productName) {
+      return `Use the uploaded reference image as the primary source. Preserve 100% of the original product identity, packaging, logo placement, typography, colors, proportions, labels, stickers, branding, and all visual details exactly as shown in the reference image. Do not modify, redesign, replace, or reinterpret any element of the product.\n\nA realistic adult male hand is holding the original motorcycle product (${productName}) box directly in front of the camera. The product remains inside its original packaging and faces the camera clearly. The product occupies approximately 70% of the frame and remains the absolute focal point. Focus remains locked on the product throughout the entire video.\n\nAtlas, the giant purebred Maine Coon mascot, appears in the background with identical appearance across all scenes. Atlas has a luxurious silver smoke gray coat, bright emerald green eyes, black lynx ear tufts, a majestic lion-like neck mane, a massive fluffy tail with dark charcoal rings, thick feathered paws, and a broad noble face. Atlas is exceptionally large, approximately 90 cm tall while sitting. Atlas must remain identical in every generation with the same fur color, eye color, facial structure, tail markings, body proportions, fur density, and overall appearance. Photorealistic, ultra-detailed fur texture, premium show-quality Maine Coon.\n\nAtlas is positioned naturally in the background, naturally visible and in focus, ${currentAtlasPosition}. Atlas appears relaxed and familiar with the environment, as if he spends every day inside the workshop. His pose feels natural and candid rather than staged.\n\nThe scene takes place inside a real motorcycle workshop during daytime, recorded casually on a Samsung Galaxy S21 Ultra. Available light only, no flash, midday natural lighting. Flat soft shadows, low contrast, even ambient light throughout the frame. The workshop feels genuinely used and lived-in, with realistic details such as hanging wrenches, slightly worn tools, spare parts shelves, tire stacks, oil containers, workshop stickers, compressors, workbenches, and several scooters waiting for service. A Honda Vario, Beat, Scoopy, NMAX, or Aerox may be partially visible in the background, background fully in focus.\n\nThe environment should resemble a trusted local Indonesian motorcycle workshop rather than a luxury garage, studio set, or futuristic workspace. Nothing appears overly perfect or artificially arranged. Small imperfections, subtle clutter, realistic wear, light dust, grease marks, and naturally organized tools create an authentic atmosphere. The workshop should feel believable, busy, and familiar to motorcycle enthusiasts.\n\nRaw candid amateur video, shot on Samsung Galaxy S21 Ultra, 24mm lens, f/8, ISO 200, 1/120s, no flash, available light only, flat soft shadows, background fully in focus, low contrast, natural flat exposure, slight compression artifacts, natural sensor noise, minor chromatic aberration, no AI enhancement, no beauty filter, no HDR, no tone mapping, no color grading, no post-processing, casual handheld smartphone feel, unpolished, imperfect everyday footage, boring reality, tiny imperfections, real-world atmosphere. The footage should look like a real person casually recorded it on their phone, not a CGI render or AI-generated animation.\n\nProduct Motion:\n\nThe hand performs a slow, smooth, natural side-to-side sway of approximately 2-4 cm. The movement is subtle, relaxed, and realistic, similar to someone casually holding a product while recording with a smartphone. The product always faces the camera. No rotation, no tilting, no zooming, no sudden movement, and no product leaving the frame.\n\nAtlas Signature Motion:\n\nAtlas remains mostly calm and relaxed. Every few seconds Atlas performs subtle realistic Maine Coon behaviors:\n\n* slow natural blink\n* slight ear twitch\n* gentle head tilt toward the product\n* brief eye movement toward the product\n* soft tail movement\n* subtle chest movement from breathing\n\nAtlas behaves like a calm workshop companion who is quietly observing the product. The movement must remain subtle, realistic, and consistent across all videos.\n\nEnvironment Motion:\n\nNatural daylight subtly shifts as sunlight enters the workshop. Small background details may move naturally, such as a hanging cloth gently swaying, distant workshop activity, or slight movement from leaves visible outside the workshop entrance. The environment remains realistic and understated.\n\nThe camera remains mostly stationary with slight natural handheld movement typical of a person recording with a smartphone. No dramatic camera motion. No cinematic tracking shots. No scene transitions. No fast cuts. No cinematic effects. No depth-of-field effects.\n\nVisual Hierarchy:\n\n1. Product box = primary focus\n2. Atlas the Maine Coon = secondary curiosity trigger\n3. Real motorcycle workshop environment = supporting atmosphere\n\nStyle:\n\nCandid amateur smartphone footage, natural handheld videography, casual product showcase, everyday realism, photorealistic fur rendering, flat natural daylight, genuine workshop atmosphere, natural grain, true-to-life colors, realistic subtle motion, unpolished everyday video quality.\n\nMotion Lock:\n\nProduct remains centered throughout the entire clip. Product text remains readable at all times. Atlas remains seated in the same location. No packaging changes. No logo changes. No color changes. No camera shake. No AI morphing. No object transformation. No flickering. No unrealistic animation. No motion blur on the product. No product deformation.\n\nCharacter Consistency Lock:\n\nAtlas must always appear as the exact same giant Maine Coon cat with identical silver smoke gray fur, emerald green eyes, black lynx ear tufts, lion-like neck mane, broad noble face, dark-ringed fluffy tail, calm expression, and premium show-quality appearance. No variation in breed, fur pattern, eye color, size, facial structure, or overall identity is allowed across generations.\n\nAtlas Signature Behavior:\n\nAtlas slowly blinks once, gently tilts his head toward the product, briefly looks at the product, and softly swishes his fluffy tail as if approving the item being showcased. This behavior must remain consistent across all videos and become Atlas's recognizable signature gesture.\n\nNegative Prompt:\n\nrotating product, changing packaging, logo changes, text distortion, color changes, camera shake, zoom in, zoom out, fast movement, excessive hand motion, multiple hands, blurry product, product leaving frame, unrealistic animation, flickering, motion blur, floating objects, packaging transformation, duplicate cats, different cat breed, aggressive cat, distorted fur, unrealistic cat proportions, luxury garage, futuristic workshop, cyberpunk environment, neon lighting, sci-fi garage, showroom atmosphere, CGI render look, 3D render style, AI-generated workshop, hyper-polished environment, unrealistically clean workspace, HDR overprocessing, excessive cinematic effects, fake bokeh, artificial depth of field, plastic-looking surfaces, over-sharpened details, unrealistic fur simulation, fantasy environment, cartoon appearance, game graphics, concept art style, AI enhancement, beauty filter, tone mapping, color grading, cinematic grading, studio lighting, dramatic lighting, bokeh blur, shallow depth of field, cinematic depth of field, background blur.`;
+    }
+
+    function updatePrompts() {
+      const productName = cleanProductName();
+      currentAtlasPosition = getSelectedAtlasPosition();
+      imagePromptEl.value = buildImagePrompt(productName);
+      videoPromptEl.value = buildVideoPrompt(productName);
+      imageCharCount.textContent = imagePromptEl.value.length.toLocaleString();
+      videoCharCount.textContent = videoPromptEl.value.length.toLocaleString();
+      if (atlasSelect.value === 'random') {
+        positionBadge.className = 'position-badge random-mode';
+        positionBadgeText.textContent = '🎲 Picked: ' + currentAtlasPosition;
+      }
+    }
+
+    async function copyPrompt(id) {
+      const textarea = document.getElementById(id);
+      textarea.select();
+      textarea.setSelectionRange(0, 999999);
+      try {
+        await navigator.clipboard.writeText(textarea.value);
+      } catch (error) {
+        document.execCommand('copy');
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+
+    productInput.addEventListener('input', updatePrompts);
+    atlasSelect.addEventListener('change', () => {
+      updatePositionBadge();
+      updatePrompts();
+    });
+    updatePositionBadge();
+    updatePrompts();
+  </script>
+</body>
+</html>
