@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Affiliate Prompt Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-main: #0f172a;
+      --border-color: rgba(0, 0, 0, 0.08);
+    }
+    .dark {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text-main: #f1f5f9;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Input & textarea */
+    input[type="text"],
+    textarea,
+    select {
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dark input[type="text"],
+    .dark textarea,
+    .dark select {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Custom select arrow */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+    .dark select option {
+      background: #1e293b;
+      color: #f1f5f9;
+    }
+
+    textarea {
+      min-height: 420px;
+      resize: vertical;
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Position badge */
+    .position-badge {
+      padding: 8px 12px;
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #3b82f6;
+      line-height: 1.6;
+    }
+    .dark .position-badge {
+      background: rgba(15, 23, 42, 0.5);
+      border-color: rgba(255,255,255,0.1);
+      color: #93c5fd;
+    }
+    .badge-label {
+      font-weight: 800;
+      color: #94a3b8;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .position-badge.random-mode {
+      border-color: #7c3aed;
+      color: #8b5cf6;
+    }
+    .dark .position-badge.random-mode {
+      color: #c4b5fd;
+    }
+
+    /* Char counter */
+    .char-counter {
+      text-align: right;
+      font-size: 11px;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+      margin-top: 4px;
+    }
+    .char-counter span {
+      color: #3b82f6;
+      font-weight: 700;
+    }
+    .dark .char-counter span {
+      color: #93c5fd;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #10b981;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s ease;
+      pointer-events: none;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      textarea { min-height: 320px; }
+    }
+  </style>
+</head>
+<body class="p-2 md:p-4">
+
+  <div class="max-w-5xl mx-auto">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-3 px-2">
+      <div class="flex items-center gap-3">
+        <div class="bg-violet-600 w-9 h-9 rounded-lg flex items-center justify-center text-white text-lg font-bold shadow-md">🐱</div>
+        <div>
+          <h1 class="text-base font-bold leading-none">Atlas Affiliate Prompt Generator</h1>
+          <p class="text-[8px] uppercase tracking-wider text-violet-500 font-bold mt-1">Maine Coon Mascot · AI Prompts</p>
+        </div>
+      </div>
+      <button onclick="toggleTheme()" class="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-transform active:scale-90">
+        <!-- Sun icon (dark mode) -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+        <!-- Moon icon (light mode) -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 118.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="glass-card rounded-2xl p-4 md:p-6 space-y-4">
+
+      <!-- SUBTITLE -->
+      <p class="text-xs text-slate-500 dark:text-slate-400 -mt-1">Enter product name once, then copy the ready-to-use master image and video prompts.</p>
+
+      <!-- SETTINGS GRID -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- PRODUCT NAME -->
+      <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-300 dark:border-amber-700">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-2">📦 Product Name</label>
+        <input
+          id="productName"
+          type="text"
+          placeholder="Example: Master Rem Racing, Paket CVT, Gas Spontan"
+          class="w-full rounded-lg px-3 py-2 text-sm font-medium"
+        />
+        <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-1 italic">The product name will be inserted automatically into both prompts.</p>
+      </div>
+
+      <!-- BACKGROUND LOCATION -->
+      <div class="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-300 dark:border-indigo-700">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-indigo-700 dark:text-indigo-400 mb-2">🌍 Background Location</label>
+        <select id="backgroundLocationSelect" class="w-full rounded-lg px-3 py-2 text-sm font-medium">
+          <option value="workshop">🔧 Motorcycle Workshop — Professional garage setting</option>
+          <option value="bedroom">🛏️ Bedroom — Cozy home bedroom environment</option>
+          <option value="workspace">💼 Home Workspace — Personal desk and work area</option>
+          <option value="review_table">🪑 Product Review Table — Neat presentation table</option>
+          <option value="garden">🌱 Garden/Park — Natural outdoor garden setting</option>
+          <option value="beach">🏖️ Beach — Seaside outdoor environment</option>
+          <option value="living_room">🛋️ Living Room — Comfortable home living space</option>
+          <option value="coffee_shop">☕ Coffee Shop — Casual café environment</option>
+          <option value="office">🏢 Office — Professional office workspace</option>
+        </select>
+        <p class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-1 italic">The background and environment will adjust based on selected location.</p>
+      </div>
+
+      <!-- PRODUCT PRESENTATION -->
+      <div class="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-300 dark:border-teal-700">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-2">📦 Product Presentation</label>
+        <select id="productPresentationSelect" class="w-full rounded-lg px-3 py-2 text-sm font-medium">
+          <option value="in_box">📦 In Box — Product inside original packaging (default)</option>
+          <option value="without_box">🎁 Without Box — Product held directly without packaging</option>
+        </select>
+        <p class="text-[10px] text-teal-600 dark:text-teal-400 mt-1 italic">Choose how the product is presented - in packaging or held directly.</p>
+      </div>
+
+      <!-- HAND CHARACTER -->
+      <div class="p-3 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-300 dark:border-rose-700">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-rose-700 dark:text-rose-400 mb-2">🤲 Hand Character</label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center gap-2 rounded-lg px-3 py-2 bg-white dark:bg-slate-900/50 border border-rose-200 dark:border-rose-800 cursor-pointer text-xs font-bold">
+            <input type="radio" name="handCharacter" value="male" checked class="accent-rose-600" />
+            <span>Male — gagah & kuat</span>
+          </label>
+          <label class="flex items-center gap-2 rounded-lg px-3 py-2 bg-white dark:bg-slate-900/50 border border-rose-200 dark:border-rose-800 cursor-pointer text-xs font-bold">
+            <input type="radio" name="handCharacter" value="female" class="accent-rose-600" />
+            <span>Female — muda, mulus & cantik</span>
+          </label>
+        </div>
+        <p class="text-[10px] text-rose-600 dark:text-rose-400 mt-1 italic">Choose the hand character that holds or presents the product in both image and video prompts.</p>
+      </div>
+
+      <!-- VIDEO IDENTITY / BRANDING TEXT -->
+      <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-300 dark:border-purple-700">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-purple-700 dark:text-purple-400 mb-2">✨ Video Identity / Branding Text (Optional)</label>
+        <input
+          id="videoIdentity"
+          type="text"
+          placeholder="Example: Your Brand Name, Store Name, or Slogan"
+          class="w-full rounded-lg px-3 py-2 text-sm font-medium"
+        />
+        <p class="text-[10px] text-purple-600 dark:text-purple-400 mt-1 italic">Add branding text that will appear integrated with the background (as wall decoration, neon sign, etc.) — leave empty for no branding text.</p>
+      </div>
+
+      <!-- ATLAS POSITION -->
+      <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+        <label class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">🐾 Atlas Cat Position</label>
+        <select id="atlasPositionSelect" class="w-full rounded-lg px-3 py-2 text-sm font-medium">
+          <option value="random">🎲 Random — keep current position, use Re-roll to change</option>
+          <option value="0">1. Lying — front paws stretched forward on the floor</option>
+          <option value="1">2. Loaf — relaxed loaf position, calmly observing</option>
+          <option value="2">3. Upright — sitting upright, quietly supervising</option>
+          <option value="3">4. Walking — slowly walking through the background</option>
+          <option value="4">5. Platform — sitting proudly on a surface or platform</option>
+          <option value="5">6. Pause — pausing naturally during routine observation</option>
+          <option value="6">7. Waiting — sitting patiently and attentively nearby</option>
+          <option value="7">8. Resting — resting while watching with quiet curiosity</option>
+          <option value="8">9. Settling — settling down comfortably in the background</option>
+          <option value="9">10. Companion — relaxed and attentive, longtime companion</option>
+        </select>
+        <div class="position-badge random-mode mt-3" id="positionBadge">
+          <span class="badge-label">Active Position</span>
+          <span id="positionBadgeText">Random position is locked until Re-roll is clicked</span>
+        </div>
+        <button
+          class="btn-reroll w-full mt-3 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+          id="rerollBtn"
+          onclick="reroll()"
+          title="Re-roll random position"
+        >🎲 Re-roll</button>
+      </div>
+
+      </div>
+
+      <!-- PROMPTS ROW -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- IMAGE PROMPT -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-500">🖼️ Master Prompt Image</label>
+            <button
+              onclick="copyPrompt('imagePrompt')"
+              class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
+            >Copy</button>
+          </div>
+          <textarea id="imagePrompt" readonly class="w-full rounded-lg px-3 py-2"></textarea>
+          <div class="char-counter">Characters: <span id="imageCharCount">0</span></div>
+        </div>
+
+        <!-- VIDEO PROMPT -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-500">🎬 Master Prompt Video</label>
+            <button
+              onclick="copyPrompt('videoPrompt')"
+              class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
+            >Copy</button>
+          </div>
+          <textarea id="videoPrompt" readonly class="w-full rounded-lg px-3 py-2"></textarea>
+          <div class="char-counter">Characters: <span id="videoCharCount">0</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">✅ Copied!</div>
+
+  <script>
+    // ── Theme toggle (same pattern as produksi.html) ──────────────────────────
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    }
+    if (localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // ── Original atlas.html JS (unchanged) ────────────────────────────────────
+    const productInput = document.getElementById('productName');
+    const imagePromptEl = document.getElementById('imagePrompt');
+    const videoPromptEl = document.getElementById('videoPrompt');
+    const toast = document.getElementById('toast');
+
+    // ── Background Locations with Enhanced Detail ─────────────────────────────
+    const backgroundLocations = {
+      workshop: {
+        name: 'Motorcycle Workshop',
+        imageSetting: 'inside a real motorcycle workshop during daytime, photographed casually on a Samsung Galaxy S21 Ultra. Available light only, no flash, midday natural lighting. Flat soft shadows, low contrast, even ambient light throughout the frame. The workshop feels genuinely used and lived-in, with authentic details such as hanging wrenches, slightly worn tools, spare parts shelves, tire stacks, oil containers, workshop stickers, compressors, workbenches, and several scooters waiting for service. A Honda Vario, Beat, Scoopy, NMAX, or Aerox may be partially visible in the background, background fully in focus. The environment should resemble a trusted local Indonesian motorcycle workshop rather than a luxury garage, studio set, or futuristic workspace. Nothing appears overly perfect or artificially arranged. Small imperfections, subtle clutter, realistic wear, light dust, grease marks, and naturally organized tools create an authentic atmosphere.',
+        videoSetting: 'inside a real motorcycle workshop during daytime, recorded casually on a Samsung Galaxy S21 Ultra. Available light only, no flash, midday natural lighting. Flat soft shadows, low contrast, even ambient light throughout the frame. The workshop feels genuinely used and lived-in, with authentic details such as hanging wrenches, slightly worn tools, spare parts shelves, tire stacks, oil containers, workshop stickers, compressors, workbenches, and several scooters waiting for service. A Honda Vario, Beat, Scoopy, NMAX, or Aerox may be partially visible in the background, background fully in focus. The environment should resemble a trusted local Indonesian motorcycle workshop rather than a luxury garage, studio set, or futuristic workspace. Nothing appears overly perfect or artificially arranged. Small imperfections, subtle clutter, realistic wear, light dust, grease marks, and naturally organized tools create an authentic atmosphere.',
+        visualIdentityFormat: 'a painted sign, workshop sticker, or metal plaque on the wall or workbench',
+      },
+      bedroom: {
+        name: 'Bedroom',
+        imageSetting: 'inside a cozy home bedroom during daytime with soft natural sunlight streaming through a window. Photographed casually on a Samsung Galaxy S21 Ultra with available light only. The bedroom has a casual, lived-in appearance with a bed, nightstand, dresser, and personal items scattered naturally. Bedding is comfortable and textured with pillows visible. Small personal touches such as framed photos, plants on shelves, decorative items, books, or a lamp add authentic character. The lighting is warm, soft, and diffused, creating gentle natural shadows. The bedroom should feel like a real lived-in personal space, not a showroom or hotel room. Small details like slightly wrinkled sheets, scattered items on nightstand, or clothing add realness. Everything appears relaxed and authentic.',
+        videoSetting: 'inside a cozy home bedroom during daytime with soft natural sunlight streaming through a window. Recorded casually on a Samsung Galaxy S21 Ultra with available light only. The bedroom has a casual, lived-in appearance with a bed, nightstand, dresser, and personal items scattered naturally. Bedding is comfortable and textured with pillows visible. Small personal touches such as framed photos, plants on shelves, decorative items, books, or a lamp add authentic character. The lighting is warm, soft, and diffused, creating gentle natural shadows. The bedroom should feel like a real lived-in personal space, not a showroom or hotel room. Small details like slightly wrinkled sheets, scattered items on nightstand, or clothing add realness. Everything appears relaxed and authentic.',
+        visualIdentityFormat: 'a wall poster, neon sign, or framed artwork on the bedroom wall above the bed or on a shelf',
+      },
+      workspace: {
+        name: 'Home Workspace',
+        imageSetting: 'at a personal home workspace or desk during daytime, photographed casually on a Samsung Galaxy S21 Ultra with natural window light and available light only. The workspace features a desk, comfortable chair, computer equipment, desk lamp, notebooks, pens, and various work supplies. The environment is organized but lived-in, showing clear signs of active daily use. Behind the desk is a bookshelf with books and decorations, wall art, or simple interior decoration. The lighting is clear and practical, typical of a focused work area with soft, even illumination. The space should feel productive but comfortable, not overly sterile or perfectly organized. Realistic details like a coffee cup on the desk, papers, keyboard, mouse, or decorative items add authenticity and personality.',
+        videoSetting: 'at a personal home workspace or desk during daytime, recorded casually on a Samsung Galaxy S21 Ultra with natural window light and available light only. The workspace features a desk, comfortable chair, computer equipment, desk lamp, notebooks, pens, and various work supplies. The environment is organized but lived-in, showing clear signs of active daily use. Behind the desk is a bookshelf with books and decorations, wall art, or simple interior decoration. The lighting is clear and practical, typical of a focused work area with soft, even illumination. The space should feel productive but comfortable, not overly sterile or perfectly organized. Realistic details like a coffee cup on the desk, papers, keyboard, mouse, or decorative items add authenticity and personality.',
+        visualIdentityFormat: 'a computer monitor wallpaper, desk nameplate, wall decal, or motivational poster visible in the background',
+      },
+      review_table: {
+        name: 'Product Review Table',
+        imageSetting: 'on a clean presentation table in a bright indoor setting, photographed casually on a Samsung Galaxy S21 Ultra. The table is clean and organized with a soft neutral background or simple white, beige, or gray backdrop. The surface is a smooth wooden or white desk with minimal clutter. The environment is well-lit with diffused natural light from windows, creating soft, even illumination without harsh shadows. The atmosphere is professional but approachable, not overly formal or corporate. There may be subtle props like a pen, notebook, soft cloth, or minimalist decoration nearby, but the focus remains entirely on the product. The lighting is even and flattering, creating gentle depth. The backdrop is simple and unobtrusive, allowing the product to be the clear center of attention.',
+        videoSetting: 'on a clean presentation table in a bright indoor setting, recorded casually on a Samsung Galaxy S21 Ultra. The table is clean and organized with a soft neutral background or simple white, beige, or gray backdrop. The surface is a smooth wooden or white desk with minimal clutter. The environment is well-lit with diffused natural light from windows, creating soft, even illumination without harsh shadows. The atmosphere is professional but approachable, not overly formal or corporate. There may be subtle props like a pen, notebook, soft cloth, or minimalist decoration nearby, but the focus remains entirely on the product. The lighting is even and flattering, creating gentle depth. The backdrop is simple and unobtrusive, allowing the product to be the clear center of attention.',
+        visualIdentityFormat: 'a subtle desk nameplate, label, or branding banner visible in the soft background of the table setup',
+      },
+      garden: {
+        name: 'Garden/Park',
+        imageSetting: 'outdoors in a beautiful garden or park setting during daytime, photographed casually on a Samsung Galaxy S21 Ultra with natural sunlight. The background features lush green plants, colorful flowers, mature trees, or manicured grass areas. The lighting is bright and natural, typical of outdoor daytime photography. Soft shadows are created naturally by leaves and tree branches, providing natural depth and visual interest. The environment feels fresh, peaceful, and open with natural textures visible throughout. There may be subtle garden elements like stone paths, wooden benches, garden structures, or landscaping features in the soft background. The air and space feel open, relaxing, and natural. Small natural imperfections like leaves, branches, or grass add authenticity.',
+        videoSetting: 'outdoors in a beautiful garden or park setting during daytime, recorded casually on a Samsung Galaxy S21 Ultra with natural sunlight. The background features lush green plants, colorful flowers, mature trees, or manicured grass areas. The lighting is bright and natural, typical of outdoor daytime videography. Soft shadows are created naturally by leaves and tree branches, providing natural depth and visual interest. The environment feels fresh, peaceful, and open with natural textures visible throughout. There may be subtle garden elements like stone paths, wooden benches, garden structures, or landscaping features in the soft background. The air and space feel open, relaxing, and natural. Small natural imperfections like leaves, branches, or grass add authenticity.',
+        visualIdentityFormat: 'a wooden garden sign, engraved stone marker, or decorative plant label visible among the garden elements',
+      },
+      beach: {
+        name: 'Beach',
+        imageSetting: 'outdoors on a beautiful beach during daytime, photographed casually on a Samsung Galaxy S21 Ultra with bright natural sunlight. The background features fine sand, ocean waves in motion, and a clear horizon line. The sky is bright and blue with minimal clouds. The lighting is intense and bright, typical of seaside settings, creating clear shadows and strong contrast. The environment feels open, breezy, and refreshing with ocean air. The sand may have natural footprints, ripple patterns, or smooth textures. The ocean waves are visible and dynamic in the background. The overall mood is relaxing, vacation-like, and peaceful. Small natural details like seashells, sand patterns, or coastal plants add authenticity.',
+        videoSetting: 'outdoors on a beautiful beach during daytime, recorded casually on a Samsung Galaxy S21 Ultra with bright natural sunlight. The background features fine sand, ocean waves in motion, and a clear horizon line. The sky is bright and blue with minimal clouds. The lighting is intense and bright, typical of seaside settings, creating clear shadows and strong contrast. The environment feels open, breezy, and refreshing with ocean air visible in the frame. The sand may have natural footprints, ripple patterns, or smooth textures. The ocean waves are visible and dynamic in the background, moving naturally. The overall mood is relaxing, vacation-like, and peaceful. Small natural details like seashells, sand patterns, or coastal plants add authenticity.',
+        visualIdentityFormat: 'a wooden beach sign, pier signage, or text written on sand in the background',
+      },
+      living_room: {
+        name: 'Living Room',
+        imageSetting: 'inside a comfortable home living room during daytime, photographed casually on a Samsung Galaxy S21 Ultra with warm natural light from windows. The space features a sofa, comfortable coffee table, entertainment area, bookshelf, and various home furniture. The room has a cozy, relaxed atmosphere with soft furnishings, cushions, throws, and decorative elements. There may be plants on shelves, artwork on walls, framed photos, or minimalist decoration. The lighting is warm and inviting, creating a naturally homey ambiance without harsh shadows. The environment feels welcoming and family-friendly. Small personal touches and lived-in details such as a blanket on the sofa, books on the table, or decorative items make the space feel authentic and comfortable.',
+        videoSetting: 'inside a comfortable home living room during daytime, recorded casually on a Samsung Galaxy S21 Ultra with warm natural light from windows. The space features a sofa, comfortable coffee table, entertainment area, bookshelf, and various home furniture. The room has a cozy, relaxed atmosphere with soft furnishings, cushions, throws, and decorative elements. There may be plants on shelves, artwork on walls, framed photos, or minimalist decoration. The lighting is warm and inviting, creating a naturally homey ambiance without harsh shadows. The environment feels welcoming and family-friendly. Small personal touches and lived-in details such as a blanket on the sofa, books on the table, or decorative items make the space feel authentic and comfortable.',
+        visualIdentityFormat: 'wall art, a framed poster, TV stand decal, or decorative wall hanging in the living room background',
+      },
+      coffee_shop: {
+        name: 'Coffee Shop',
+        imageSetting: 'inside a casual, modern coffee shop during daytime, photographed casually on a Samsung Galaxy S21 Ultra with warm ambient lighting. The setting features wooden or marble tables, comfortable seating, coffee bar counter in the background, and shelves displaying coffee products and pastries. The atmosphere is relaxed and social, typical of a contemporary café. The lighting is warm, soft, and inviting from both windows and café lighting. There may be other customers sitting in the background, creating an authentic lived-in café environment. The background includes details like espresso machines, pastry display cases, hanging menu boards, plants, wall decorations, or coffee equipment. The environment feels welcoming, cozy, and perfect for casual meetings or product reviews.',
+        videoSetting: 'inside a casual, modern coffee shop during daytime, recorded casually on a Samsung Galaxy S21 Ultra with warm ambient lighting. The setting features wooden or marble tables, comfortable seating, coffee bar counter in the background, and shelves displaying coffee products and pastries. The atmosphere is relaxed and social, typical of a contemporary café. The lighting is warm, soft, and inviting from both windows and café lighting. There may be other customers sitting in the background, creating an authentic lived-in café environment. The background includes details like espresso machines, pastry display cases, hanging menu boards, plants, wall decorations, or coffee equipment. The environment feels welcoming, cozy, and perfect for casual meetings or product reviews.',
+        visualIdentityFormat: 'a café menu board, window signage, hanging banner, or wall-mounted branding visible in the coffee shop background',
+      },
+      office: {
+        name: 'Office',
+        imageSetting: 'inside a professional office workspace during daytime, photographed casually on a Samsung Galaxy S21 Ultra with bright artificial and natural lighting. The setting features office desks, ergonomic chairs, computers with monitors, filing cabinets, and organized office supplies. The atmosphere is professional and organized but still shows realistic signs of active work. The lighting is bright and clear, typical of modern office environments. There may be coworkers visible in the background, office plants, minimalist artwork, or professional decoration. The environment feels productive and corporate but not overly sterile or artificial. Authentic details like papers on desks, office equipment, desk organizers, whiteboards, or meeting areas add realism and a lived-in professional feel.',
+        videoSetting: 'inside a professional office workspace during daytime, recorded casually on a Samsung Galaxy S21 Ultra with bright artificial and natural lighting. The setting features office desks, ergonomic chairs, computers with monitors, filing cabinets, and organized office supplies. The atmosphere is professional and organized but still shows realistic signs of active work. The lighting is bright and clear, typical of modern office environments. There may be coworkers visible in the background, office plants, minimalist artwork, or professional decoration. The environment feels productive and corporate but not overly sterile or artificial. Authentic details like papers on desks, office equipment, desk organizers, whiteboards, or meeting areas add realism and a lived-in professional feel.',
+        visualIdentityFormat: 'a company nameplate, desk signage, wall plaque, or office branding visible on a desk, wall, or partition in the background',
+      },
+    };
+
+    function getBackgroundLocationDescription(locationKey, type) {
+      const location = backgroundLocations[locationKey] || backgroundLocations.workshop;
+      return type === 'image' ? location.imageSetting : location.videoSetting;
+    }
+
+    const visualIdentityFormatsByLocation = {
+      workshop: [
+        'one hand-painted shop sign on the workshop wall',
+        'one worn vinyl sticker on a tool cabinet',
+        'one small metal plaque screwed onto the workbench'
+      ],
+      bedroom: [
+        'one framed wall art piece above the bed',
+        'one small poster pinned naturally on the bedroom wall',
+        'one wooden decorative sign placed on a shelf'
+      ],
+      workspace: [
+        'one simple computer monitor wallpaper visible on the desk',
+        'one desk nameplate placed near the keyboard',
+        'one small motivational poster on the wall behind the desk'
+      ],
+      review_table: [
+        'one small printed card standing on the table',
+        'one subtle label attached to the table edge',
+        'one clean desk nameplate in the background'
+      ],
+      garden: [
+        'one wooden garden sign among the plants',
+        'one engraved stone marker near the path',
+        'one small plant label inserted into the soil'
+      ],
+      beach: [
+        'one weathered wooden beach sign planted in the sand',
+        'one simple text carved into damp sand',
+        'one small pier sign in the beach background'
+      ],
+      living_room: [
+        'one framed wall art piece in the living room background',
+        'one decorative wall hanging near the sofa',
+        'one subtle decal on the TV stand'
+      ],
+      coffee_shop: [
+        'one chalkboard café menu sign in the background',
+        'one window signage decal on the café glass',
+        'one small hanging banner near the coffee counter'
+      ],
+      office: [
+        'one office wall plaque in the background',
+        'one desk nameplate on a workstation',
+        'one subtle company-style sign on an office partition'
+      ]
+    };
+
+    function getRandomVisualIdentityFormat(locationKey) {
+      const formats = visualIdentityFormatsByLocation[locationKey] || visualIdentityFormatsByLocation.workshop;
+      return formats[Math.floor(Math.random() * formats.length)];
+    }
+
+    function getVideoIdentityDescription(locationKey, identityText) {
+      if (!identityText || identityText.trim() === '') {
+        return '';
+      }
+      const visualFormat = currentVisualIdentityFormat || getRandomVisualIdentityFormat(locationKey);
+      return `\n\nVIDEO IDENTITY BRANDING: Show the text "${identityText}" only as ${visualFormat}. It must be a real object already inside the location, captured by the camera, not added later. Keep the design simple, natural, and clearly readable. Match the exact perspective, surface texture, lighting, shadows, color tone, and small imperfections of the scene. Do not create overlay text, floating captions, flat graphic blocks, label boxes, title cards, or edited-on typography. The branding should feel like normal environmental decoration that belongs in the location and stays secondary to the product.`;
+    }
+
+    const atlasPositions = [
+      'lying majestically on the floor with his front paws stretched forward, appearing completely at home in the space',
+      'sitting in a relaxed loaf position on the ground, calmly observing the surroundings with quiet presence',
+      'sitting upright in the background as if quietly supervising with calm confidence and gentle authority',
+      'slowly walking through the background, naturally blending into the environment as part of the daily routine',
+      'sitting proudly on a surface or platform, calmly overlooking the space with quiet authority and composure',
+      'pausing naturally in the background as if taking a brief break during his usual observation of the space',
+      'sitting patiently nearby as though waiting attentively, peacefully present in the environment',
+      'resting comfortably while casually watching the product with quiet curiosity, serene familiarity, and calm interest',
+      'settling down comfortably in the background, relaxed and at ease as if he belongs completely in this space',
+      'positioned naturally in the scene, relaxed and attentive, like a longtime companion who spends every day in this environment'
+    ];
+
+    const atlasSelect = document.getElementById('atlasPositionSelect');
+    const backgroundLocationSelect = document.getElementById('backgroundLocationSelect');
+    const productPresentationSelect = document.getElementById('productPresentationSelect');
+    const videoIdentityInput = document.getElementById('videoIdentity');
+    const handCharacterInputs = document.querySelectorAll('input[name="handCharacter"]');
+    const positionBadge = document.getElementById('positionBadge');
+    const positionBadgeText = document.getElementById('positionBadgeText');
+    const rerollBtn = document.getElementById('rerollBtn');
+    const imageCharCount = document.getElementById('imageCharCount');
+    const videoCharCount = document.getElementById('videoCharCount');
+
+    function getRandomAtlasPosition() {
+      return atlasPositions[Math.floor(Math.random() * atlasPositions.length)];
+    }
+
+    function getSelectedAtlasPosition() {
+      const val = atlasSelect.value;
+      if (val === 'random') {
+        return getRandomAtlasPosition();
+      }
+      return atlasPositions[parseInt(val)];
+    }
+
+    function updatePositionBadge() {
+      const val = atlasSelect.value;
+      if (val === 'random') {
+        positionBadge.className = 'position-badge random-mode';
+        positionBadgeText.textContent = '🎲 Active: ' + currentAtlasPosition + ' — click Re-roll to change';
+        rerollBtn.disabled = false;
+      } else {
+        positionBadge.className = 'position-badge';
+        positionBadgeText.textContent = atlasPositions[parseInt(val)];
+        rerollBtn.disabled = true;
+      }
+    }
+
+    function reroll() {
+      if (atlasSelect.value !== 'random') return;
+      currentAtlasPosition = getRandomAtlasPosition();
+      updatePrompts();
+    }
+
+    let currentAtlasPosition = getSelectedAtlasPosition();
+    let currentVisualIdentityFormat = null;
+
+    function cleanProductName() {
+      const value = productInput.value.trim();
+      return value || '[PRODUCT NAME]';
+    }
+
+    function getSelectedHandDescription() {
+      const selectedHand = document.querySelector('input[name="handCharacter"]:checked')?.value || 'male';
+      if (selectedHand === 'female') {
+        return 'a realistic adult young woman hand with smooth fair skin, clean well-groomed fingers, slim elegant proportions, soft feminine knuckles, neat natural nails, and a beautiful gentle appearance';
+      }
+      return 'a realistic adult male hand with a masculine, strong, and sturdy appearance, slightly larger fingers, firm grip, visible natural knuckle structure, subtle veins, and a confident rugged look';
+    }
+
+    function buildImagePrompt(productName) {
+      const backgroundSetting = getBackgroundLocationDescription(backgroundLocationSelect.value, 'image');
+      const videoIdentityDesc = getVideoIdentityDescription(backgroundLocationSelect.value, videoIdentityInput.value);
+      const isInBox = productPresentationSelect.value === 'in_box';
+      const handDescription = getSelectedHandDescription();
+      
+      const productPlacementText = isInBox 
+        ? `${handDescription} is holding the original ${productName} product box directly in front of the camera. The product remains inside its original packaging and faces the camera clearly. The product is the absolute center of attention and occupies approximately 70% of the frame. Focus is locked on the product at all times.`
+        : `${handDescription} is holding and presenting the original ${productName} product directly (without packaging) in front of the camera. The product is displayed clearly, showing its shape, form, details, and surface characteristics. The product occupies approximately 70% of the frame and is the absolute center of attention. Focus is locked on the product at all times. The hand positioning showcases the product's natural form and design elegantly.`;
+      
+      const productFocusText = isInBox 
+        ? '1. Product box = primary focus (sharp, clear, readable, packaging details visible)'
+        : '1. Product form = primary focus (sharp, clear, product details and shape visible)';
+
+      return `REFERENCE IMAGE FIDELITY: Use the uploaded reference image as the primary source. Preserve 100% of the original product identity, packaging, logo placement, typography, colors, proportions, labels, stickers, branding, and all visual details exactly as shown in the reference image. Do not modify, redesign, replace, or reinterpret any element of the product.
+
+PRODUCT PLACEMENT: ${productPlacementText}
+
+ATLAS MASCOT CHARACTER CONSISTENCY: Include the brand mascot Atlas, a giant purebred Maine Coon cat with a photorealistic, ultra-detailed appearance. Atlas has:
+- Luxurious silver smoke gray coat (solid gray tone with lighter underside)
+- Bright emerald green eyes (intelligent, calm expression)
+- Black lynx ear tufts (prominent and feathered)
+- Majestic lion-like neck mane (thick, luxurious fur around the neck and chest)
+- Massive fluffy tail with dark charcoal rings (distinctive ringed pattern)
+- Thick feathered paws (large, well-furred paws)
+- Broad noble face (strong, dignified facial structure)
+- Exceptionally large size (approximately 90 cm tall while sitting)
+
+CRITICAL: Atlas must remain identical in every generation. Same fur color, eye color, facial structure, tail markings, body proportions, fur density, and overall appearance. Premium show-quality Maine Coon appearance only.
+
+ATLAS POSITIONING: Atlas is positioned naturally in the background, visible and in focus, ${currentAtlasPosition}. Atlas appears relaxed and familiar with the environment, as if he spends every day in this space. His pose feels natural and candid rather than staged, occasionally looking toward the product with a calm, intelligent, and approving expression.
+
+ENVIRONMENT SETTING: ${backgroundSetting}${videoIdentityDesc}
+
+LIGHTING SPECIFICATIONS: Available light only, no flash, midday natural lighting. Flat soft shadows, low contrast, even ambient light throughout the frame. The environment feels genuinely used and lived-in, with realistic details and natural textures. Nothing appears overly perfect or artificially arranged. Small imperfections, subtle clutter, realistic wear, and naturally organized elements create an authentic atmosphere.
+
+CAMERA & TECHNICAL SPECIFICATIONS: Raw candid amateur photo, shot on Samsung Galaxy S21 Ultra, 24mm lens, f/8, ISO 200, 1/120s, no flash, available light only, flat soft shadows, background fully in focus, low contrast, slight JPEG compression artifacts, natural sensor noise, minor chromatic aberration, slight color fringing, no AI enhancement, no beauty filter, no HDR, no tone mapping, no post-processing. Casual snapshot aesthetic, disposable camera vibe, unedited, unpolished, imperfect everyday photo, boring reality, tiny imperfections, real-world atmosphere. The image should look like a real person casually took it on their phone, not an AI-generated render.
+
+VISUAL HIERARCHY:
+${productFocusText}
+2. Atlas the Maine Coon = secondary curiosity trigger (visible but not distracting)
+3. Real environment = supporting atmosphere (realistic backdrop)
+
+COMPOSITION NOTES: Candid affiliate snapshot, natural amateur composition, authentic shadows, realistic skin texture, sharp product focus, natural visual storytelling, realistic smartphone camera aesthetics, slight natural grain, everyday photo quality. Atlas must never distract from the product. Atlas functions as a recognizable brand mascot and curiosity element only.
+
+CHARACTER LOCK: Atlas must always appear as the exact same giant Maine Coon cat with identical silver smoke gray fur, emerald green eyes, black lynx ear tufts, lion-like neck mane, broad noble face, dark-ringed fluffy tail, calm expression, and premium show-quality appearance. No variation in breed, fur pattern, eye color, size, facial structure, or overall identity is allowed across generations.
+
+NEGATIVE PROMPT: altered packaging, incorrect logo, modified text, changed colors, blurry product, duplicate cats, multiple animals, distorted fur, aggressive cat, unrealistic proportions, cartoon style, overexposed lighting, floating objects, AI artifacts, warped text, extra hands, cropped product, luxury garage, futuristic workshop, cyberpunk environment, neon lighting, sci-fi garage, showroom atmosphere, perfect symmetry, CGI render look, 3D render style, AI-generated workshop, hyper-polished environment, unrealistic lighting, concept art, futuristic machinery, sterile workspace, unrealistically clean environment, HDR overprocessing, excessive cinematic effects, fake bokeh, artificial depth of field, plastic-looking surfaces, over-sharpened details, AI enhancement, beauty filter, tone mapping, studio lighting, dramatic lighting, cinematic lighting, bokeh blur, background blur, shallow depth of field.`;
+    }
+
+    function buildVideoPrompt(productName) {
+      const backgroundSetting = getBackgroundLocationDescription(backgroundLocationSelect.value, 'video');
+      const videoIdentityDesc = getVideoIdentityDescription(backgroundLocationSelect.value, videoIdentityInput.value);
+      const isInBox = productPresentationSelect.value === 'in_box';
+      const handDescription = getSelectedHandDescription();
+      
+      const productPlacementText = isInBox
+        ? `${handDescription} is holding the original ${productName} product box directly in front of the camera. The product remains inside its original packaging and faces the camera clearly. The product occupies approximately 70% of the frame and remains the absolute focal point. Focus remains locked on the product throughout the entire video.`
+        : `${handDescription} is holding and presenting the original ${productName} product directly (without packaging) in front of the camera. The product is displayed clearly, showing its shape, form, details, and surface characteristics. The product occupies approximately 70% of the frame and remains the absolute focal point. Focus remains locked on the product throughout the entire video. The hand positioning naturally showcases the product's natural form, design, and features elegantly.`;
+      
+      const productFocusText = isInBox
+        ? '1. Product box = primary focus (sharp, clear, readable)'
+        : '1. Product form = primary focus (sharp, clear, product details and shape visible)';
+
+      return `REFERENCE IMAGE FIDELITY: Use the uploaded reference image as the primary source. Preserve 100% of the original product identity, packaging, logo placement, typography, colors, proportions, labels, stickers, branding, and all visual details exactly as shown in the reference image. Do not modify, redesign, replace, or reinterpret any element of the product.
+
+PRODUCT PLACEMENT: ${productPlacementText}
+
+ATLAS MASCOT CHARACTER CONSISTENCY: Include the brand mascot Atlas, a giant purebred Maine Coon cat with a photorealistic, ultra-detailed appearance. Atlas has:
+- Luxurious silver smoke gray coat (solid gray tone with lighter underside)
+- Bright emerald green eyes (intelligent, calm expression)
+- Black lynx ear tufts (prominent and feathered)
+- Majestic lion-like neck mane (thick, luxurious fur around the neck and chest)
+- Massive fluffy tail with dark charcoal rings (distinctive ringed pattern)
+- Thick feathered paws (large, well-furred paws)
+- Broad noble face (strong, dignified facial structure)
+- Exceptionally large size (approximately 90 cm tall while sitting)
+
+CRITICAL: Atlas must remain identical in every generation. Same fur color, eye color, facial structure, tail markings, body proportions, fur density, and overall appearance. Premium show-quality Maine Coon appearance only.
+
+ATLAS POSITIONING: Atlas is positioned naturally in the background, visible and in focus, ${currentAtlasPosition}. Atlas appears relaxed and familiar with the environment, as if he spends every day in this space. His pose feels natural and candid rather than staged, occasionally looking toward the product with a calm, intelligent, and approving expression.
+
+ENVIRONMENT SETTING: ${backgroundSetting}${videoIdentityDesc}
+
+LIGHTING SPECIFICATIONS: Available light only, no flash, midday natural lighting. Flat soft shadows, low contrast, even ambient light throughout the frame. The environment feels genuinely used and lived-in, with realistic details and natural textures. Nothing appears overly perfect or artificially arranged. Small imperfections, subtle clutter, realistic wear, and naturally organized elements create an authentic atmosphere.
+
+CAMERA & TECHNICAL SPECIFICATIONS: Raw candid amateur video, shot on Samsung Galaxy S21 Ultra, 24mm lens, f/8, ISO 200, 1/120s, no flash, available light only, flat soft shadows, background fully in focus, low contrast, natural flat exposure, slight compression artifacts, natural sensor noise, minor chromatic aberration, no AI enhancement, no beauty filter, no HDR, no tone mapping, no color grading, no post-processing. Casual handheld smartphone feel, unpolished, imperfect everyday footage, boring reality, tiny imperfections, real-world atmosphere. The footage should look like a real person casually recorded it on their phone, not a CGI render or AI-generated animation.
+
+PRODUCT MOTION: The hand performs a slow, smooth, natural side-to-side sway of approximately 2-4 cm. The movement is subtle, relaxed, and realistic, similar to someone casually holding a product while recording with a smartphone. The product always faces the camera. No rotation, no tilting, no zooming, no sudden movement, and no product leaving the frame.
+
+ATLAS SIGNATURE MOTION: Atlas remains mostly calm and relaxed. Every few seconds Atlas performs subtle realistic Maine Coon behaviors such as: slow natural blink, slight ear twitch, gentle head tilt toward the product, brief eye movement toward the product, soft tail movement, subtle chest movement from breathing. Atlas behaves like a calm environment companion who is quietly observing the product. The movement must remain subtle, realistic, and consistent across all videos.
+
+ENVIRONMENT MOTION: Natural daylight subtly shifts as sunlight enters the space. Small background details may move naturally, such as a hanging cloth gently swaying, distant activity, or slight movement from natural elements. The environment remains realistic and understated. The camera remains mostly stationary with slight natural handheld movement typical of a person recording with a smartphone. No dramatic camera motion, no cinematic tracking shots, no scene transitions, no fast cuts, no cinematic effects, no depth-of-field effects.
+
+VISUAL HIERARCHY:
+${productFocusText}
+2. Atlas the Maine Coon = secondary curiosity trigger (visible but not distracting)
+3. Real environment = supporting atmosphere (realistic backdrop)
+
+COMPOSITION NOTES: Candid affiliate video, natural amateur composition, authentic shadows, realistic movements, sharp product focus, natural visual storytelling, realistic smartphone camera aesthetics, slight natural grain, everyday video quality. Atlas must never distract from the product. Atlas functions as a recognizable brand mascot and curiosity element only.
+
+MOTION LOCK: Product remains centered throughout the entire clip. Product text remains readable at all times. Atlas remains seated in the same location. No packaging changes, no logo changes, no color changes, no camera shake, no AI morphing, no object transformation, no flickering, no unrealistic animation, no motion blur on the product, no product deformation.
+
+CHARACTER CONSISTENCY LOCK: Atlas must always appear as the exact same giant Maine Coon cat with identical silver smoke gray fur, emerald green eyes, black lynx ear tufts, lion-like neck mane, broad noble face, dark-ringed fluffy tail, calm expression, and premium show-quality appearance. No variation in breed, fur pattern, eye color, size, facial structure, or overall identity is allowed across generations.
+
+ATLAS SIGNATURE BEHAVIOR: Atlas slowly blinks once, gently tilts his head toward the product, briefly looks at the product, and softly swishes his fluffy tail as if approving the item being showcased. This behavior must remain consistent across all videos and become Atlas's recognizable signature gesture.
+
+NEGATIVE PROMPT: rotating product, changing packaging, logo changes, text distortion, color changes, camera shake, zoom in, zoom out, fast movement, excessive hand motion, multiple hands, blurry product, product leaving frame, unrealistic animation, flickering, motion blur, floating objects, packaging transformation, duplicate cats, different cat breed, aggressive cat, distorted fur, unrealistic cat proportions, luxury garage, futuristic workshop, cyberpunk environment, neon lighting, sci-fi garage, showroom atmosphere, CGI render look, 3D render style, AI-generated workshop, hyper-polished environment, unrealistically clean workspace, HDR overprocessing, excessive cinematic effects, fake bokeh, artificial depth of field, plastic-looking surfaces, over-sharpened details, unrealistic fur simulation, fantasy environment, cartoon appearance, game graphics, concept art style, AI enhancement, beauty filter, tone mapping, color grading, cinematic grading, studio lighting, dramatic lighting, bokeh blur, shallow depth of field, cinematic depth of field, background blur.`;
+    }
+
+    function updatePrompts() {
+      const productName = cleanProductName();
+      currentVisualIdentityFormat = videoIdentityInput.value.trim()
+        ? getRandomVisualIdentityFormat(backgroundLocationSelect.value)
+        : null;
+      imagePromptEl.value = buildImagePrompt(productName);
+      videoPromptEl.value = buildVideoPrompt(productName);
+      imageCharCount.textContent = imagePromptEl.value.length.toLocaleString();
+      videoCharCount.textContent = videoPromptEl.value.length.toLocaleString();
+      if (atlasSelect.value === 'random') {
+        positionBadge.className = 'position-badge random-mode';
+        positionBadgeText.textContent = '🎲 Active: ' + currentAtlasPosition + ' — click Re-roll to change';
+      }
+    }
+
+    async function copyPrompt(id) {
+      const textarea = document.getElementById(id);
+      textarea.select();
+      textarea.setSelectionRange(0, 999999);
+      try {
+        await navigator.clipboard.writeText(textarea.value);
+      } catch (error) {
+        document.execCommand('copy');
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+
+    productInput.addEventListener('input', updatePrompts);
+    atlasSelect.addEventListener('change', () => {
+      if (atlasSelect.value !== 'random') {
+        currentAtlasPosition = atlasPositions[parseInt(atlasSelect.value)];
+      }
+      updatePositionBadge();
+      updatePrompts();
+    });
+    backgroundLocationSelect.addEventListener('change', updatePrompts);
+    productPresentationSelect.addEventListener('change', updatePrompts);
+    videoIdentityInput.addEventListener('input', updatePrompts);
+    handCharacterInputs.forEach(input => input.addEventListener('change', updatePrompts));
+    updatePositionBadge();
+    updatePrompts();
+  </script>
+</body>
+</html>
