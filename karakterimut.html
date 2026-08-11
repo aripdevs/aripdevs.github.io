@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Stylized Character Prompt Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 font-bold text-xl">
+                    3D
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">3D Character Prompt Studio</h1>
+                    <p class="text-xs text-sky-400 font-medium">Master System & Species Generator</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="resetToDefault()" title="Reset ke pengaturan default" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700 transition flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="hidden sm:inline">Reset</span>
+                </button>
+                <button onclick="randomizeAll()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700 transition flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Acak (Randomize)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Presets Bar -->
+    <div class="bg-slate-900/50 border-b border-slate-800/80 py-2.5 overflow-x-auto custom-scrollbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 text-xs">
+            <span class="text-slate-400 font-medium whitespace-nowrap mr-1 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                Preset Cepat:
+            </span>
+            <button onclick="loadPreset('red_panda')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Red Panda</button>
+            <button onclick="loadPreset('capybara')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Capybara</button>
+            <button onclick="loadPreset('sloth')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Sloth</button>
+            <button onclick="loadPreset('tiger')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Cute Tiger</button>
+            <button onclick="loadPreset('giraffe')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Giraffe (Short Neck)</button>
+            <button onclick="loadPreset('penguin')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Penguin (Feathers)</button>
+            <button onclick="loadPreset('elephant')" class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 border border-slate-700 whitespace-nowrap transition">Elephant (Velvety Skin)</button>
+        </div>
+    </div>
+
+    <!-- Main Application Layout -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT PANEL: Controls & Customization Form (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- Section 1: Species & Identity -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                        1. Identitas & Spesies Hewan
+                    </h2>
+                    <span class="text-xs text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full">Aturan 20% Identity</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Animal Species Select -->
+                    <div>
+                        <label for="speciesSelect" class="block text-xs font-medium text-slate-300 mb-1.5">Pilih Spesies Hewan</label>
+                        <select id="speciesSelect" onchange="onSpeciesChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition">
+                            <option value="capybara">Capybara</option>
+                            <option value="sloth">Sloth (Kukang)</option>
+                            <option value="hamster">Hamster</option>
+                            <option value="red_panda" selected>Red Panda</option>
+                            <option value="otter">Otter (Berang-berang)</option>
+                            <option value="raccoon">Raccoon (Rakun)</option>
+                            <option value="fox">Fox (Rubah)</option>
+                            <option value="cat">Cat (Kucing)</option>
+                            <option value="dog">Dog (Anjing Puppy)</option>
+                            <option value="rabbit">Rabbit (Kelinci)</option>
+                            <option value="koala">Koala</option>
+                            <option value="panda">Panda</option>
+                            <option value="penguin">Penguin</option>
+                            <option value="duck">Duck (Bebek)</option>
+                            <option value="elephant">Elephant (Gajah)</option>
+                            <option value="giraffe">Giraffe (Jerapah)</option>
+                            <option value="tiger">Tiger (Harimau)</option>
+                            <option value="custom">-- Custom Species --</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Species Name (if custom selected) -->
+                    <div id="customSpeciesContainer" class="hidden">
+                        <label for="customSpeciesInput" class="block text-xs font-medium text-slate-300 mb-1.5">Nama Spesies Kustom (English)</label>
+                        <input type="text" id="customSpeciesInput" oninput="updatePrompt()" placeholder="e.g. Shiba Inu / Alpaca / Axolotl" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                        <p id="customSpeciesWarning" class="hidden text-[11px] text-rose-400 mt-1">Nama spesies kustom wajib diisi.</p>
+                    </div>
+
+                    <!-- Species Features (20% identity) -->
+                    <div class="sm:col-span-2">
+                        <label for="speciesFeatures" class="block text-xs font-medium text-slate-300 mb-1.5 flex justify-between">
+                            <span>Ciri Identitas Utama [SPECIES FEATURES]</span>
+                            <span class="text-slate-500 font-normal">Dapat diedit</span>
+                        </label>
+                        <textarea id="speciesFeatures" oninput="updatePrompt()" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition leading-relaxed"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Anatomy, Material & Fur -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        2. Tekstur Bulu / Kulit & Warna
+                    </h2>
+                    <span class="text-xs text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full">Aturan 80% Stylized</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Material Type -->
+                    <div>
+                        <label for="materialType" class="block text-xs font-medium text-slate-300 mb-1.5">Tipe Material Permukaan</label>
+                        <select id="materialType" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="fur">Soft dense finely groomed fur (Bulu Lebat Halus)</option>
+                            <option value="feathers">Softly groomed micro-feathers (Mikro Bulu Unggas)</option>
+                            <option value="skin">Soft smooth velvety skin (Kulit Halus Beludru)</option>
+                        </select>
+                    </div>
+
+                    <!-- Proportion Formula Preset -->
+                    <div>
+                        <label for="proportionType" class="block text-xs font-medium text-slate-300 mb-1.5">Formula Proporsi Tubuh</label>
+                        <select id="proportionType" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="standard">Standar 80/20 (Kepala 40%, Badan 45%, Kaki 15%)</option>
+                            <option value="adapted">Adaptasi Ekstrem (Leher/Anggota Tubuh Sangat Dipendekkan)</option>
+                        </select>
+                    </div>
+
+                    <!-- Fur/Feather Color Pattern Description -->
+                    <div class="sm:col-span-2">
+                        <label for="colorPattern" class="block text-xs font-medium text-slate-300 mb-1.5">Deskripsi Pola & Warna Bulu [COLOR & PATTERN]</label>
+                        <input type="text" id="colorPattern" oninput="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                        <p id="colorPatternWarning" class="hidden text-[11px] text-rose-400 mt-1">Deskripsi warna & pola wajib diisi agar prompt lengkap.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Face, Expression & Pose -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        3. Ekspresi Wajah & Pose
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Eye Color -->
+                    <div>
+                        <label for="eyeColor" class="block text-xs font-medium text-slate-300 mb-1.5">Warna Mata [EYE COLOR]</label>
+                        <select id="eyeColor" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="warm brown">Warm Brown (Cokelat Hangat)</option>
+                            <option value="warm amber-brown">Amber / Golden Brown</option>
+                            <option value="glossy dark hazel">Dark Hazel / Olive</option>
+                            <option value="deep sapphire blue">Sapphire Blue</option>
+                            <option value="soft emerald green">Emerald Green</option>
+                            <option value="dark obsidian black">Obsidian Black</option>
+                        </select>
+                    </div>
+
+                    <!-- Expression Formula Selector -->
+                    <div>
+                        <label for="expressionSelect" class="block text-xs font-medium text-slate-300 mb-1.5">Ekspresi Emosi [EXPRESSION]</label>
+                        <select id="expressionSelect" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="innocent">Cute Innocent (Senyum lembut, kelopak mata rileks)</option>
+                            <option value="shy">Shy (Palu-malu, kepala agak miring, pipi kemerahan)</option>
+                            <option value="mischievous" selected>Mischievous (Jahil/Usil, seringai tipis, alis terangkat)</option>
+                            <option value="sleepy">Sleepy (Mengantuk, mata setengah terpejam)</option>
+                            <option value="curious">Curious (Penasaran, mata lebar, kepala miring)</option>
+                            <option value="coy">Coy / Giggly (Malu-malu kucing, menutupi mulut)</option>
+                            <option value="proud">Proud (Bangga, dada sedikit membusung)</option>
+                            <option value="embarrassed">Embarrassed (Malu, pipi merah, tangan di mulut)</option>
+                        </select>
+                    </div>
+
+                    <!-- Pose Selector -->
+                    <div class="sm:col-span-2">
+                        <label for="poseSelect" class="block text-xs font-medium text-slate-300 mb-1.5">Pose & Gestur Tangan [POSE]</label>
+                        <select id="poseSelect" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="neutral_standing">Standing upright, both paws resting naturally beside the body, neutral relaxed pose</option>
+                            <option value="one_paw_cheek" selected>Standing upright on two tiny legs, one paw gently touching its cheek, head tilted slightly</option>
+                            <option value="waving">Standing upright, waving one paw gently toward the camera</option>
+                            <option value="both_cheeks">Standing upright with both paws resting beside the cheeks</option>
+                            <option value="clasped_hands">Standing upright with tiny paws clasped together in front of the belly</option>
+                            <option value="foot_forward">Standing upright with one foot slightly forward and arms relaxed</option>
+                            <option value="paws_chest">Standing upright holding both paws close to the chest</option>
+                            <option value="cheeky_lean">Standing upright, leaning slightly sideways with a cheeky mischievous expression</option>
+                            <option value="giggling">Standing upright with one paw raised covering the mouth as if quietly giggling</option>
+                            <option value="looking_up">Standing upright looking upward curiously with head tilted</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Accessories & Costume (Optional) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-pink-400"></span>
+                        4. Aksesoris & Kostum
+                    </h2>
+                    <span class="text-xs text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full">Opsional</span>
+                </div>
+
+                <div id="accessoryGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer hover:border-sky-600 transition">
+                        <input type="checkbox" class="accessory-checkbox accent-sky-500" data-text="wearing a tiny soft knitted beanie hat" onchange="updatePrompt()">
+                        Topi Kecil
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer hover:border-sky-600 transition">
+                        <input type="checkbox" class="accessory-checkbox accent-sky-500" data-text="wearing a small cozy knitted scarf around the neck" onchange="updatePrompt()">
+                        Syal
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer hover:border-sky-600 transition">
+                        <input type="checkbox" class="accessory-checkbox accent-sky-500" data-text="wearing a small cute bow tie" onchange="updatePrompt()">
+                        Dasi Kupu-kupu
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer hover:border-sky-600 transition">
+                        <input type="checkbox" class="accessory-checkbox accent-sky-500" data-text="carrying a tiny rounded shoulder bag" onchange="updatePrompt()">
+                        Tas Kecil
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer hover:border-sky-600 transition">
+                        <input type="checkbox" class="accessory-checkbox accent-sky-500" data-text="wearing a small delicate flower crown" onchange="updatePrompt()">
+                        Mahkota Bunga
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer hover:border-sky-600 transition">
+                        <input type="checkbox" class="accessory-checkbox accent-sky-500" data-text="wearing tiny round glasses" onchange="updatePrompt()">
+                        Kacamata Bulat
+                    </label>
+                </div>
+                <p class="text-[11px] text-slate-500">Centang beberapa jika perlu. Aksesoris akan otomatis dirender mengikuti gaya material bulu/kulit karakter agar tetap konsisten.</p>
+            </div>
+
+            <!-- Section 5: Render & Studio Environment -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                        5. Gaya Render, Kamera & Studio
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Render Style -->
+                    <div>
+                        <label for="renderStyle" class="block text-xs font-medium text-slate-300 mb-1.5">Gaya Render [STYLE]</label>
+                        <select id="renderStyle" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="pixar" selected>Pixar-Soft Cinematic (Default, lembut & realistis-stylized)</option>
+                            <option value="dreamworks">DreamWorks-Glossy (Warna jenuh, specular lebih tajam)</option>
+                            <option value="claymation">Claymation / Stop-Motion (Tekstur clay, matte handcrafted)</option>
+                            <option value="chibi">Chibi Kawaii Toy (Gaya vinyl figure / blind-box)</option>
+                        </select>
+                    </div>
+
+                    <!-- Camera Angle -->
+                    <div>
+                        <label for="cameraAngle" class="block text-xs font-medium text-slate-300 mb-1.5">Sudut Kamera [ANGLE]</label>
+                        <select id="cameraAngle" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="front" selected>Front View (Menghadap Kamera)</option>
+                            <option value="three_quarter">Three-Quarter View (3/4 Angle)</option>
+                            <option value="side">Side Profile (Tampak Samping)</option>
+                            <option value="top_down">Slightly Elevated Top-Down 3/4</option>
+                            <option value="turnaround">Full Turnaround Sheet (Front + Side + Back)</option>
+                        </select>
+                    </div>
+
+                    <!-- Backdrop Color -->
+                    <div>
+                        <label for="bgTone" class="block text-xs font-medium text-slate-300 mb-1.5">Warna Studio Backdrop</label>
+                        <select id="bgTone" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="warm light-gray">Warm Light-Gray (Abu-abu Muda Hangat)</option>
+                            <option value="soft beige">Soft Beige (Beige Lembut)</option>
+                            <option value="ivory white">Ivory White (Gading / Off-White)</option>
+                            <option value="soft pastel cream">Soft Pastel Cream</option>
+                        </select>
+                    </div>
+
+                    <!-- Aspect Ratio / Framing -->
+                    <div>
+                        <label for="framingFormat" class="block text-xs font-medium text-slate-300 mb-1.5">Rasio & Framing</label>
+                        <select id="framingFormat" onchange="updatePrompt()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition">
+                            <option value="vertical">Full body centered, vertical portrait framing (9:16), 85mm lens</option>
+                            <option value="square">Full body centered, square framing (1:1), 85mm lens</option>
+                            <option value="landscape">Full body centered, landscape framing (16:9), generous negative space</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: Generated Master Prompt & Output (5 Cols) -->
+        <div class="lg:col-span-5 space-y-6">
+
+            <!-- Sticky Box Container -->
+            <div class="lg:sticky lg:top-20 space-y-6">
+
+                <!-- Positive Master Prompt Box -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <h3 class="font-semibold text-sm text-slate-100">Master Positive Prompt</h3>
+                        </div>
+                        <span class="text-[10px] bg-sky-950 text-sky-400 font-mono px-2 py-0.5 rounded border border-sky-800/50">English Output</span>
+                    </div>
+
+                    <!-- Prompt Output Box -->
+                    <div id="positivePromptOutput" class="bg-slate-950 border border-slate-800/80 rounded-xl p-3.5 text-xs text-slate-300 font-mono leading-relaxed h-72 overflow-y-auto custom-scrollbar select-all">
+                        Generating...
+                    </div>
+
+                    <!-- Copy Buttons -->
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="copyToClipboard('positivePromptOutput', 'Positive Prompt Copied!')" class="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <span>Salin Positive Prompt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Universal Negative Prompt Box -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                        <h3 class="font-semibold text-xs text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                            Universal Negative Prompt
+                        </h3>
+                        <button onclick="copyToClipboard('negativePromptOutput', 'Negative Prompt Copied!')" class="text-xs text-slate-400 hover:text-white transition bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">Salin</button>
+                    </div>
+
+                    <div id="negativePromptOutput" class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 text-[11px] text-slate-400 font-mono leading-relaxed max-h-32 overflow-y-auto custom-scrollbar select-all">
+photorealistic wildlife photography, realistic animal proportions, long realistic limbs, aggressive expression, sharp claws, sharp teeth, scary, grotesque, uncanny face, human body, human hands, muscular anatomy, anime eyes, oversized cartoon eyes, flat 2D illustration, sketch, painting, low-poly, plastic toy, glossy vinyl, stiff pose, messy fur, wet fur, extremely long fur, excessive fur detail, harsh shadows, dramatic lighting, dark background, complex environment, forest, jungle, cage, furniture, props, clutter, text, watermark, logo, cropped feet, cropped ears, extreme wide angle, fisheye distortion
+                    </div>
+                </div>
+
+                <!-- Copy Both Action -->
+                <button onclick="copyBothPrompts()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span>Salin Keduanya (Positive + Negative)</span>
+                </button>
+
+                <!-- Export / Import Preset -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="exportPreset()" title="Simpan seluruh konfigurasi sebagai file JSON" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Export Preset</span>
+                    </button>
+                    <button onclick="triggerImportPreset()" title="Muat konfigurasi dari file JSON" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span>Import Preset</span>
+                    </button>
+                    <input type="file" id="importPresetInput" accept=".json,application/json" class="hidden" onchange="handleImportPreset(event)">
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 border border-sky-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4 flex items-center gap-3 z-50">
+        <div id="toastIcon" class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <div>
+            <p id="toastMessage" class="text-xs font-semibold text-slate-100">Disalin ke Clipboard!</p>
+            <p class="text-[10px] text-slate-400">Siap ditempel ke Midjourney / Flux / DALL-E 3</p>
+        </div>
+    </div>
+
+    <script>
+        // Species Identity Database based on 80/20 rule
+        const speciesData = {
+            capybara: {
+                name: "Capybara",
+                features: "broad rounded capybara muzzle, tiny rounded ears positioned high on head, small dark nose, compact rodent paws",
+                material: "fur",
+                colorPattern: "warm golden-brown short coat, slightly lighter tan fur on belly and muzzle",
+                eyeColor: "warm brown"
+            },
+            sloth: {
+                name: "Sloth",
+                features: "cream facial mask around eyes, dark brown eye patches, small rounded black nose, slightly longer curved arms with soft rounded claws",
+                material: "fur",
+                colorPattern: "shaggy but neatly groomed beige-brown fur, light cream facial mask",
+                eyeColor: "warm brown"
+            },
+            hamster: {
+                name: "Hamster",
+                features: "puffed rounded hamster cheeks, tiny translucent rounded ears, small pink-brown nose, very short forepaws",
+                material: "fur",
+                colorPattern: "warm caramel-orange and white dense fur, cream-colored belly",
+                eyeColor: "dark obsidian black"
+            },
+            red_panda: {
+                name: "Red Panda",
+                features: "rounded red panda face, creamy white facial cheek markings, small rounded triangular ears with pale interiors, fluffy rounded striped tail",
+                material: "fur",
+                colorPattern: "reddish-orange fur, cream cheeks and muzzle, dark brown lower limbs, subtle ringed tail",
+                eyeColor: "warm brown"
+            },
+            otter: {
+                name: "Otter",
+                features: "broad rounded muzzle, tiny flat ears, small black shiny nose, compact webbed paws, short thick rounded tail",
+                material: "fur",
+                colorPattern: "smooth dense espresso brown fur, cream-colored muzzle and chest",
+                eyeColor: "glossy dark hazel"
+            },
+            raccoon: {
+                name: "Raccoon",
+                features: "signature dark eye mask, rounded ears, pale muzzle, short compact paws, fluffy ringed tail",
+                material: "fur",
+                colorPattern: "slate gray and charcoal fur, black eye mask, pale cream muzzle, fluffy striped tail",
+                eyeColor: "warm brown"
+            },
+            fox: {
+                name: "Fox",
+                features: "simplified triangular ears, compact short muzzle, dark tiny paws, short rounded fluffy tail",
+                material: "fur",
+                colorPattern: "vibrant orange-red fur, cream cheeks and belly, dark brown tiny paws, white tail tip",
+                eyeColor: "warm amber-brown"
+            },
+            cat: {
+                name: "Cat",
+                features: "small triangular ears, rounded kitten muzzle, tiny pink nose, soft cheek fluffs, compact paws",
+                material: "fur",
+                colorPattern: "soft plush striped tabby pattern, cream muzzle and belly",
+                eyeColor: "deep sapphire blue"
+            },
+            dog: {
+                name: "Dog",
+                features: "rounded puppy muzzle, soft floppy puppy ears, shiny dark wet nose, compact puppy paws",
+                material: "fur",
+                colorPattern: "warm golden-cream plush coat with lighter chest and muzzle",
+                eyeColor: "warm brown"
+            },
+            rabbit: {
+                name: "Rabbit",
+                features: "long but softly rounded ears, tiny triangular nose, round cheeks, tiny forepaws, compact hind feet, fluffy ball tail",
+                material: "fur",
+                colorPattern: "short dense velvety white and light gray fur, soft pink inner ears",
+                eyeColor: "dark obsidian black"
+            },
+            koala: {
+                name: "Koala",
+                features: "large rounded fluffy ears, oversized soft black oval nose, pale chest patch, compact curved limbs",
+                material: "fur",
+                colorPattern: "soft charcoal-gray and ash silver plush fur, pale cream chest patch",
+                eyeColor: "dark obsidian black"
+            },
+            panda: {
+                name: "Panda",
+                features: "rounded black ears, signature dark eye patches, cream-white face and belly, short dark limbs",
+                material: "fur",
+                colorPattern: "classic plush black and white fur pattern with dark shoulder band and eye patches",
+                eyeColor: "dark obsidian black"
+            },
+            penguin: {
+                name: "Penguin",
+                features: "rounded wing-flippers, smooth white belly, dark charcoal back mask, tiny orange beak and webbed feet",
+                material: "feathers",
+                colorPattern: "dark charcoal-black back plumage, pure white belly, soft pastel orange beak accents",
+                eyeColor: "dark obsidian black"
+            },
+            duck: {
+                name: "Duck",
+                features: "small rounded wings, short webbed orange feet, compact rounded bill",
+                material: "feathers",
+                colorPattern: "warm soft pastel yellow down feathers, soft pastel orange bill and webbed feet",
+                eyeColor: "dark obsidian black"
+            },
+            elephant: {
+                name: "Elephant",
+                features: "drastically shortened soft trunk, oversized rounded floppy ears, tiny stubby tusks, chubby legs",
+                material: "skin",
+                colorPattern: "soft warm slate-gray velvety skin, subtle pale pink inner ear accents",
+                eyeColor: "warm brown"
+            },
+            giraffe: {
+                name: "Giraffe",
+                features: "drastically shortened stubby neck, small rounded ossicones on head, signature soft spot patterns, tiny tail",
+                material: "fur",
+                colorPattern: "golden-tan short fur with simplified rounded brown patch patterns and cream belly",
+                eyeColor: "warm brown"
+            },
+            tiger: {
+                name: "Tiger",
+                features: "oversized rounded tiger face, miniature rounded ears, tiny pink-brown nose, compact paw pads",
+                material: "fur",
+                colorPattern: "warm golden-orange coat, simplified dark tiger stripes following body contours, cream muzzle and belly",
+                eyeColor: "warm amber-brown"
+            }
+        };
+
+        // Expression formulas
+        const expressionFormulas = {
+            innocent: "innocent friendly smile, relaxed eyelids, gentle warm eye contact, wholesome innocent expression",
+            shy: "shy bashful expression, slight head tilt, subtle rosy cheeks, gentle eyelids looking slightly upward",
+            mischievous: "half-lidded eyes, tiny asymmetric smirk, slightly raised eyebrow, playful mischievous sideways glance",
+            sleepy: "heavy relaxed eyelids, tiny soft sleepy smile, cozy relaxed facial demeanor",
+            curious: "wide attentive curious eyes, subtle head tilt, small open mouth expression",
+            coy: "half-lidded coy eyes, gentle giggling smile, subtle blush on cheeks",
+            proud: "tiny confident smile, head held high, proud mischievous look",
+            embarrassed: "soft rosy cheeks, shy sideways glance, adorable embarrassed expression"
+        };
+
+        // Render style formulas
+        const renderStyleFormulas = {
+            pixar: "High-end cinematic 3D animated feature character rendering, polished studio-quality CG, soft subsurface scattering on nose and ears, delicate skin shading on paws, realistic micro-details without photorealism, rounded sculpted forms, soft plush-like visual appeal, Pixar/Disney-caliber character finish.",
+            dreamworks: "Glossy high-budget 3D animated feature rendering, vibrant saturated color grading, slightly exaggerated glossy specular highlights, smooth polished surface shading, dynamic appealing character finish with punchy contrast.",
+            claymation: "Stop-motion claymation-inspired 3D rendering, soft matte clay-like surface texture, gentle handcrafted micro-imperfections, warm tactile stop-motion character appeal, soft diffused studio shading, subtle fingerprint-like surface variation.",
+            chibi: "Chibi-kawaii collectible toy rendering, glossy vinyl-figure-like finish, oversized rounded proportions emphasized further, playful toy-like specular highlights, clean minimal surface detail, blind-box collectible aesthetic."
+        };
+
+        // Camera angle formulas
+        const cameraAngleFormulas = {
+            front: "front-facing view, character looking directly toward camera",
+            three_quarter: "three-quarter angle view, character turned slightly to reveal depth and side silhouette",
+            side: "clean side profile view, full silhouette clearly visible",
+            top_down: "slightly elevated top-down three-quarter view, showing more of the head and back silhouette",
+            turnaround: "full character turnaround reference sheet showing front view, side view, and back view arranged neatly in a row, consistent lighting, pose, and proportions across all views, clean character model sheet style"
+        };
+
+        function onSpeciesChange() {
+            const speciesVal = document.getElementById("speciesSelect").value;
+            const customContainer = document.getElementById("customSpeciesContainer");
+
+            if (speciesVal === "custom") {
+                customContainer.classList.remove("hidden");
+                document.getElementById("speciesFeatures").value = "unique facial features, small rounded ears, soft muzzle, compact paws";
+                document.getElementById("colorPattern").value = "soft natural color blocking with cream accents on muzzle and belly";
+            } else {
+                customContainer.classList.add("hidden");
+                const data = speciesData[speciesVal];
+                if (data) {
+                    document.getElementById("speciesFeatures").value = data.features;
+                    document.getElementById("colorPattern").value = data.colorPattern;
+                    document.getElementById("materialType").value = data.material;
+                    document.getElementById("eyeColor").value = data.eyeColor;
+                    
+                    if (speciesVal === "giraffe" || speciesVal === "elephant") {
+                        document.getElementById("proportionType").value = "adapted";
+                    } else {
+                        document.getElementById("proportionType").value = "standard";
+                    }
+                }
+            }
+            updatePrompt();
+        }
+
+        function getSpeciesName() {
+            const speciesVal = document.getElementById("speciesSelect").value;
+            if (speciesVal === "custom") {
+                const input = document.getElementById("customSpeciesInput").value.trim();
+                return input ? input : "creature";
+            }
+            return speciesData[speciesVal] ? speciesData[speciesVal].name : "creature";
+        }
+
+        function updatePrompt() {
+            if (!validateInputs()) {
+                document.getElementById("positivePromptOutput").innerText = "⚠️ Lengkapi dulu field yang ditandai merah di atas (lihat pesan peringatan) sebelum prompt master dibuat.";
+                saveConfig();
+                return;
+            }
+
+            const speciesName = getSpeciesName();
+            const features = document.getElementById("speciesFeatures").value.trim();
+            const materialVal = document.getElementById("materialType").value;
+            const proportionVal = document.getElementById("proportionType").value;
+            const colorPattern = document.getElementById("colorPattern").value.trim();
+            const eyeColor = document.getElementById("eyeColor").value;
+            const exprKey = document.getElementById("expressionSelect").value;
+            const exprText = expressionFormulas[exprKey] || "subtle cute smile";
+            const poseText = document.getElementById("poseSelect").value;
+            const bgTone = document.getElementById("bgTone").value;
+            const framing = document.getElementById("framingFormat").value;
+            const renderStyleKey = document.getElementById("renderStyle").value;
+            const renderStyleClause = renderStyleFormulas[renderStyleKey] || renderStyleFormulas.pixar;
+            const cameraAngleKey = document.getElementById("cameraAngle").value;
+            const cameraAngleClause = cameraAngleFormulas[cameraAngleKey] || cameraAngleFormulas.front;
+
+            const accessoryTexts = Array.from(document.querySelectorAll(".accessory-checkbox:checked")).map(el => el.dataset.text);
+            let accessoryClause = "";
+            if (accessoryTexts.length > 0) {
+                accessoryClause = `\nThe character is also ${accessoryTexts.join(", ")}, accessories rendered with matching soft plush stylized material, subtle stitching and seam detail, kept simple and uncluttered.`;
+            }
+
+            // Anatomy Ratio sentence
+            let anatomyClause = "";
+            if (proportionVal === "adapted") {
+                anatomyClause = "Exaggerated cute proportions: oversized rounded head, compact chubby pear-shaped body, drastically shortened neck and limbs while preserving the recognizable silhouette, body wider than shoulders, rounded belly, extremely short limbs, tiny feet, compact readable silhouette.";
+            } else {
+                anatomyClause = "Exaggerated cute proportions: head approximately 40% of total character height, body approximately 45%, legs approximately 15%; body wider than shoulders, rounded belly, extremely short limbs, tiny paws, slightly oversized face, compact readable silhouette.";
+            }
+
+            // Material Clause
+            let materialClause = "";
+            if (materialVal === "feathers") {
+                materialClause = "Softly groomed micro-feathers instead of fur, smooth velvety feather surface, realistic yet stylized feather shading, plush tactile appearance, smooth color transitions.";
+            } else if (materialVal === "skin") {
+                materialClause = "Soft smooth velvety skin with delicate micro-wrinkles, realistic yet stylized surface shading, soft tactile plush appearance, smooth transitions.";
+            } else {
+                materialClause = "Soft dense finely groomed fur, short individual fur strands visible around the silhouette, realistic yet stylized fur shading, plush tactile appearance, smooth transitions between fur colors, slightly lighter fur on the belly, muzzle, and inner facial areas where appropriate. No messy fur.";
+            }
+
+            // Build Master Positive Prompt
+            const masterPrompt = `A charming ultra-cute stylized 3D character of a ${speciesName}, designed as a small lovable animated creature.
+${anatomyClause}
+Preserve the ${speciesName}’s most recognizable natural features — ${features} — while simplifying the anatomy into an adorable family-animation character design.
+Large expressive ${eyeColor} eyes with glossy dark pupils, subtle catchlights, softly defined eyelids, gentle eyebrows or brow shapes where appropriate, a tiny softly sculpted mouth, rounded muzzle, and a ${exprText}. The face feels emotionally expressive and slightly anthropomorphic while remaining unmistakably the animal species.
+${materialClause}
+${colorPattern}.
+The character is ${poseText}, giving a shy, playful, innocent, sleepy, curious or mischievous personality.${accessoryClause}
+${renderStyleClause}
+Minimal seamless studio background in ${bgTone}, completely uncluttered, no props unless specified. Soft diffused key light from upper front-left, gentle fill light, subtle rim illumination, delicate contact shadow beneath the feet, soft ambient occlusion.
+${framing}, ${cameraAngleClause}, character fully in focus, generous negative space around the character.
+Mood: wholesome, lovable, innocent, cozy, slightly humorous, expressive, collectible-character appeal.
+Visual quality: premium animated movie character, highly refined modeling, clean topology appearance, sophisticated surface grooming, soft cinematic global illumination, extremely polished but simple.
+Avoid realistic animal proportions; prioritize appealing rounded character design while maintaining species recognition.`;
+
+            document.getElementById("positivePromptOutput").innerText = masterPrompt;
+            saveConfig();
+        }
+
+        function validateInputs() {
+            let valid = true;
+
+            const colorPatternEl = document.getElementById("colorPattern");
+            const colorPatternWarning = document.getElementById("colorPatternWarning");
+            if (colorPatternEl.value.trim() === "") {
+                colorPatternEl.classList.add("border-rose-500", "focus:border-rose-500");
+                colorPatternWarning.classList.remove("hidden");
+                valid = false;
+            } else {
+                colorPatternEl.classList.remove("border-rose-500", "focus:border-rose-500");
+                colorPatternWarning.classList.add("hidden");
+            }
+
+            const speciesVal = document.getElementById("speciesSelect").value;
+            const customInput = document.getElementById("customSpeciesInput");
+            const customWarning = document.getElementById("customSpeciesWarning");
+            if (speciesVal === "custom" && customInput.value.trim() === "") {
+                customInput.classList.add("border-rose-500", "focus:border-rose-500");
+                customWarning.classList.remove("hidden");
+                valid = false;
+            } else {
+                customInput.classList.remove("border-rose-500", "focus:border-rose-500");
+                customWarning.classList.add("hidden");
+            }
+
+            return valid;
+        }
+
+        // ---- Persistence (localStorage + JSON export/import) ----
+        const STORAGE_KEY = "3dCharacterPromptStudioConfig";
+        const CONFIG_VERSION = 1;
+
+        function buildConfigObject() {
+            const accessories = Array.from(document.querySelectorAll(".accessory-checkbox")).map(el => el.checked);
+            return {
+                _version: CONFIG_VERSION,
+                species: document.getElementById("speciesSelect").value,
+                customSpecies: document.getElementById("customSpeciesInput").value,
+                features: document.getElementById("speciesFeatures").value,
+                material: document.getElementById("materialType").value,
+                proportion: document.getElementById("proportionType").value,
+                colorPattern: document.getElementById("colorPattern").value,
+                eyeColor: document.getElementById("eyeColor").value,
+                expression: document.getElementById("expressionSelect").value,
+                pose: document.getElementById("poseSelect").value,
+                bgTone: document.getElementById("bgTone").value,
+                framing: document.getElementById("framingFormat").value,
+                renderStyle: document.getElementById("renderStyle").value,
+                cameraAngle: document.getElementById("cameraAngle").value,
+                accessories: accessories
+            };
+        }
+
+        function applyConfig(config) {
+            if (!config || typeof config !== "object") {
+                throw new Error("Format konfigurasi tidak valid.");
+            }
+
+            document.getElementById("speciesSelect").value = config.species || "red_panda";
+            const customContainer = document.getElementById("customSpeciesContainer");
+            if (config.species === "custom") {
+                customContainer.classList.remove("hidden");
+            } else {
+                customContainer.classList.add("hidden");
+            }
+            document.getElementById("customSpeciesInput").value = config.customSpecies || "";
+            document.getElementById("speciesFeatures").value = config.features || "";
+            document.getElementById("materialType").value = config.material || "fur";
+            document.getElementById("proportionType").value = config.proportion || "standard";
+            document.getElementById("colorPattern").value = config.colorPattern || "";
+            document.getElementById("eyeColor").value = config.eyeColor || "warm brown";
+            document.getElementById("expressionSelect").value = config.expression || "innocent";
+            document.getElementById("poseSelect").value = config.pose || "neutral_standing";
+            document.getElementById("bgTone").value = config.bgTone || "warm light-gray";
+            document.getElementById("framingFormat").value = config.framing || "vertical";
+            document.getElementById("renderStyle").value = config.renderStyle || "pixar";
+            document.getElementById("cameraAngle").value = config.cameraAngle || "front";
+            const accessoryEls = document.querySelectorAll(".accessory-checkbox");
+            if (Array.isArray(config.accessories)) {
+                accessoryEls.forEach((el, i) => { el.checked = !!config.accessories[i]; });
+            } else {
+                accessoryEls.forEach(el => { el.checked = false; });
+            }
+            document.getElementById("customSpeciesInput").classList.remove("border-rose-500", "focus:border-rose-500");
+            document.getElementById("colorPattern").classList.remove("border-rose-500", "focus:border-rose-500");
+        }
+
+        function saveConfig() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(buildConfigObject()));
+            } catch (e) {
+                console.warn("Gagal menyimpan konfigurasi ke localStorage:", e);
+            }
+        }
+
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return false;
+                applyConfig(JSON.parse(saved));
+                return true;
+            } catch (e) {
+                console.warn("Gagal memuat konfigurasi dari localStorage:", e);
+                return false;
+            }
+        }
+
+        function exportPreset() {
+            const config = buildConfigObject();
+            const json = JSON.stringify(config, null, 2);
+            const blob = new Blob([json], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const speciesSlug = getSpeciesName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `preset-${speciesSlug || "character"}-${timestamp}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("Preset berhasil diekspor sebagai JSON!");
+        }
+
+        function triggerImportPreset() {
+            document.getElementById("importPresetInput").click();
+        }
+
+        function handleImportPreset(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith(".json")) {
+                showToast("File harus berformat .json");
+                event.target.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    applyConfig(config);
+                    updatePrompt();
+                    showToast(`Preset "${file.name}" berhasil diimpor!`);
+                } catch (err) {
+                    console.error("Gagal mengimpor preset:", err);
+                    showToast("Gagal impor: file JSON tidak valid atau rusak.");
+                }
+            };
+            reader.onerror = function () {
+                showToast("Gagal membaca file preset.");
+            };
+            reader.readAsText(file);
+            event.target.value = ""; // allow re-importing the same file later
+        }
+
+        function resetToDefault() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {
+                console.warn("Gagal menghapus konfigurasi dari localStorage:", e);
+            }
+            document.getElementById("speciesSelect").value = "red_panda";
+            document.getElementById("customSpeciesInput").value = "";
+            document.getElementById("customSpeciesInput").classList.remove("border-rose-500", "focus:border-rose-500");
+            document.getElementById("customSpeciesWarning").classList.add("hidden");
+            onSpeciesChange();
+            document.getElementById("expressionSelect").value = "mischievous";
+            document.getElementById("poseSelect").value = "one_paw_cheek";
+            document.getElementById("bgTone").value = "warm light-gray";
+            document.getElementById("framingFormat").value = "vertical";
+            document.getElementById("renderStyle").value = "pixar";
+            document.getElementById("cameraAngle").value = "front";
+            document.querySelectorAll(".accessory-checkbox").forEach(el => { el.checked = false; });
+            updatePrompt();
+            showToast("Direset ke pengaturan default!");
+        }
+
+        function loadPreset(key) {
+            if (speciesData[key]) {
+                document.getElementById("speciesSelect").value = key;
+                onSpeciesChange();
+
+                // Custom preset tweak for flare
+                if (key === 'red_panda') {
+                    document.getElementById("expressionSelect").value = "mischievous";
+                    document.getElementById("poseSelect").value = "one_paw_cheek";
+                } else if (key === 'sloth') {
+                    document.getElementById("expressionSelect").value = "sleepy";
+                    document.getElementById("poseSelect").value = "clasped_hands";
+                } else if (key === 'capybara') {
+                    document.getElementById("expressionSelect").value = "curious";
+                    document.getElementById("poseSelect").value = "waving";
+                } else if (key === 'tiger') {
+                    document.getElementById("expressionSelect").value = "innocent";
+                    document.getElementById("poseSelect").value = "waving";
+                }
+                updatePrompt();
+                showToast("Preset " + speciesData[key].name + " Dimuat!");
+            }
+        }
+
+        function randomizeAll() {
+            const keys = Object.keys(speciesData);
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            document.getElementById("speciesSelect").value = randomKey;
+            onSpeciesChange();
+
+            const expressions = Object.keys(expressionFormulas);
+            const randomExpr = expressions[Math.floor(Math.random() * expressions.length)];
+            document.getElementById("expressionSelect").value = randomExpr;
+
+            const poses = [
+                "neutral_standing", "one_paw_cheek", "waving", "both_cheeks", "clasped_hands", 
+                "foot_forward", "paws_chest", "cheeky_lean", "giggling", "looking_up"
+            ];
+            const randomPose = poses[Math.floor(Math.random() * poses.length)];
+            document.getElementById("poseSelect").value = randomPose;
+
+            updatePrompt();
+            showToast("Karakter Diacak secara Otomatis!");
+        }
+
+        async function copyTextToClipboard(text) {
+            // Prefer the modern async Clipboard API when available in a secure context
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (e) {
+                    console.warn("Clipboard API gagal, mencoba fallback:", e);
+                }
+            }
+            // Fallback for older browsers / non-secure contexts
+            try {
+                const dummy = document.createElement("textarea");
+                dummy.style.position = "fixed";
+                dummy.style.opacity = "0";
+                dummy.value = text;
+                document.body.appendChild(dummy);
+                dummy.focus();
+                dummy.select();
+                const success = document.execCommand("copy");
+                document.body.removeChild(dummy);
+                return success;
+            } catch (e) {
+                console.error("Gagal menyalin ke clipboard:", e);
+                return false;
+            }
+        }
+
+        async function copyToClipboard(elementId, successMsg) {
+            const text = document.getElementById(elementId).innerText;
+            const ok = await copyTextToClipboard(text);
+            showToast(ok ? successMsg : "Gagal menyalin. Salin manual (select all + copy).");
+        }
+
+        async function copyBothPrompts() {
+            const pos = document.getElementById("positivePromptOutput").innerText;
+            const neg = document.getElementById("negativePromptOutput").innerText;
+            const fullText = `[MASTER POSITIVE PROMPT]\n${pos}\n\n[UNIVERSAL NEGATIVE PROMPT]\n${neg}`;
+
+            const ok = await copyTextToClipboard(fullText);
+            showToast(ok ? "Positive + Negative Prompt Disalin!" : "Gagal menyalin. Salin manual (select all + copy).");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toastMessage");
+            toastMsg.innerText = msg;
+            
+            toast.classList.remove("opacity-0", "pointer-events-none", "translate-y-4");
+            toast.classList.add("opacity-100", "translate-y-0");
+
+            setTimeout(() => {
+                toast.classList.remove("opacity-100", "translate-y-0");
+                toast.classList.add("opacity-0", "pointer-events-none", "translate-y-4");
+            }, 2600);
+        }
+
+        // Initialize view on window load: restore last saved config if present,
+        // otherwise fall back to the default species setup.
+        window.onload = function() {
+            const restored = loadConfig();
+            if (restored) {
+                updatePrompt();
+                showToast("Konfigurasi terakhir berhasil dipulihkan");
+            } else {
+                onSpeciesChange();
+            }
+        };
+    </script>
+</body>
+</html>
