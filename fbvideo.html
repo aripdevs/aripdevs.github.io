@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Cleaner Pro & URL Inspector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode JS Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        code, pre, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
+            <div class="flex items-center space-x-3 shrink-0">
+                <div class="p-2 bg-brand-600/20 text-brand-500 border border-brand-500/30 rounded-xl shadow-lg shadow-brand-500/10">
+                    <i data-lucide="shield-clean" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide text-white flex items-center gap-2">
+                        Link Cleaner <span class="bg-brand-500/20 text-brand-400 border border-brand-500/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Pro</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Unwrap redirects, strip tracking, and extract video streams</p>
+                </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <nav class="flex items-center space-x-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 overflow-x-auto scrollbar-none touch-pan-x">
+                <button id="tabReelsBtn" onclick="switchTab('reels')" class="flex items-center gap-2 px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition-all bg-pink-600 text-white shadow shrink-0 active:scale-95">
+                    <i data-lucide="video" class="w-3.5 h-3.5"></i> FB Reels Extractor
+                </button>
+                <button id="tabSingleBtn" onclick="switchTab('single')" class="flex items-center gap-2 px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0 active:scale-95">
+                    <i data-lucide="link" class="w-3.5 h-3.5"></i> Single Link
+                </button>
+                <button id="tabBatchBtn" onclick="switchTab('batch')" class="flex items-center gap-2 px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0 active:scale-95">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i> Batch Cleaner
+                </button>
+                <button id="tabHistoryBtn" onclick="switchTab('history')" class="flex items-center gap-2 px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0 active:scale-95">
+                    <i data-lucide="history" class="w-3.5 h-3.5"></i> History
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
+
+        <section id="singleTab" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <label for="urlInput" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="arrow-right-left" class="w-4 h-4 text-brand-400"></i> Enter Raw URL to Clean
+                    </label>
+                    <div class="flex items-center gap-2 text-xs">
+                        <button onclick="loadSampleLink()" class="text-brand-400 hover:text-brand-300 font-medium hover:underline flex items-center gap-1 transition-all active:scale-95">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Try Sample Link
+                        </button>
+                        <span class="text-slate-600">•</span>
+                        <button onclick="clearSingleInput()" class="text-slate-400 hover:text-slate-200 transition-all">Clear</button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="relative flex items-center">
+                        <div class="absolute left-3.5 top-3.5 text-slate-500 pointer-events-none">
+                            <i data-lucide="globe" class="w-5 h-5"></i>
+                        </div>
+                        <textarea id="urlInput" rows="3" placeholder="Paste link here (e.g., https://igfetch.ssstoks1.workers.dev/?u=https%3A%2F%2F...)"
+                            class="w-full pl-10 pr-3 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-slate-100 font-mono text-xs focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all resize-none"></textarea>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row justify-end gap-2">
+                        <button onclick="pasteAndClean()" class="w-full sm:w-auto px-4 py-2.5 bg-brand-600 hover:bg-brand-500 active:scale-95 text-white rounded-xl text-xs font-semibold transition-all shadow-md flex items-center justify-center gap-1.5">
+                            <i data-lucide="clipboard-paste" class="w-4 h-4"></i> Paste & Clean
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <span class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                        <i data-lucide="sliders" class="w-3.5 h-3.5 text-slate-400"></i> Cleaning Presets:
+                    </span>
+                    <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2">
+                        <button onclick="applyPreset('smart')" class="preset-btn px-3 py-2 rounded-xl text-xs font-medium border border-brand-500/40 bg-brand-500/10 text-brand-300 hover:bg-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Smart Clean (Recommended)
+                        </button>
+                        <button onclick="applyPreset('unwrap')" class="preset-btn px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="unfold-horizontal" class="w-3.5 h-3.5"></i> Unwrap Target Direct
+                        </button>
+                        <button onclick="applyPreset('base')" class="preset-btn px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="scissors" class="w-3.5 h-3.5"></i> Strip All Parameters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultsContainer" class="hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                            </span>
+                            <h2 class="text-sm font-semibold text-white">Cleaned URL Output</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2" id="statsBadges"></div>
+                    </div>
+
+                    <div class="relative bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-emerald-300 break-all leading-relaxed shadow-inner">
+                        <span id="outputUrl"></span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                        <div class="grid grid-cols-1 sm:flex items-center gap-2 w-full sm:w-auto">
+                            <button onclick="copyToClipboard('outputUrl')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-semibold transition-all shadow-md flex items-center justify-center gap-2">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Clean Link
+                            </button>
+                            <a id="openLinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 rounded-xl text-xs font-semibold transition-all border border-slate-700 flex items-center justify-center gap-2">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open in New Tab
+                            </a>
+                            <button onclick="toggleQRCode()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-xl text-xs font-semibold transition-all border border-slate-700 flex items-center justify-center gap-1.5">
+                                <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR Code
+                            </button>
+                        </div>
+                        <div class="text-xs text-slate-400 text-center sm:text-right" id="lengthDiff"></div>
+                    </div>
+
+                    <div id="qrContainer" class="hidden pt-4 border-t border-slate-800 flex flex-col items-center justify-center p-4 bg-slate-950/60 rounded-xl">
+                        <div id="qrcode" class="p-3 bg-white rounded-xl shadow-lg"></div>
+                        <p class="text-[11px] text-slate-400 mt-2">Scan to open cleaned link on mobile</p>
+                    </div>
+                </div>
+
+                <div id="mediaPreviewCard" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <span class="text-xs font-semibold text-brand-400 flex items-center gap-2">
+                            <i data-lucide="play-circle" class="w-4 h-4"></i> Media Stream Preview
+                        </span>
+                        <span id="mediaTypeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                            MP4 Video
+                        </span>
+                    </div>
+                    <div id="mediaContainer" class="flex justify-center items-center bg-slate-950 rounded-xl p-2 min-h-[200px] border border-slate-800 overflow-hidden"></div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                                <i data-lucide="list-filter" class="w-4 h-4 text-brand-400"></i> Query Parameter Inspector
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Toggle parameters on/off to dynamically rebuild the cleaned URL</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <button onclick="toggleAllParams(true)" class="text-brand-400 hover:text-brand-300 font-medium">Select All</button>
+                            <span class="text-slate-600">•</span>
+                            <button onclick="toggleAllParams(false)" class="text-slate-400 hover:text-slate-200 font-medium">Deselect All</button>
+                            <span class="text-slate-600">•</span>
+                            <button onclick="deselectTrackingOnly()" class="text-amber-400 hover:text-amber-300 font-medium">Strip Tracking Only</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto scrollbar-none">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/80 text-slate-400 uppercase font-mono text-[10px]">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg w-12 text-center">Keep</th>
+                                    <th class="p-3 w-36 sm:w-44">Parameter Key</th>
+                                    <th class="p-3 w-24 sm:w-28">Category</th>
+                                    <th class="p-3">Decoded Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paramTableBody" class="divide-y divide-slate-800/60 font-mono"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="noParamsNotice" class="hidden p-6 text-center text-slate-500 text-xs italic">
+                        No query parameters detected in this cleaned URL.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reelsTab" class="space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="clapperboard" class="w-5 h-5 text-pink-400"></i> Facebook Reels Direct Video Extractor
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Konversi link Facebook Reel ke Direct MP4 Video Stream Link (`.fbcdn.net`)</p>
+                    </div>
+                    <button onclick="loadSampleReel()" class="text-xs text-pink-400 hover:text-pink-300 font-medium flex items-center gap-1 self-start sm:self-auto active:scale-95">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Coba Sample Reel
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 relative">
+                        <div class="relative flex-grow flex items-center">
+                            <div class="absolute left-3.5 text-slate-500 pointer-events-none">
+                                <i data-lucide="facebook" class="w-5 h-5 text-blue-400"></i>
+                            </div>
+                            <input type="url" id="reelsUrlInput" placeholder="Masukkan link Facebook Reel (cth: https://www.facebook.com/reel/1038481365516562)"
+                                class="w-full pl-11 pr-3 py-3 bg-slate-950/90 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all">
+                        </div>
+                        
+                        <button id="extractBtn" onclick="extractReelDirectLink()" class="px-5 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 active:scale-95 text-white rounded-xl text-xs font-semibold transition-all shadow-md flex items-center justify-center gap-2 shrink-0">
+                            <i data-lucide="zap" class="w-4 h-4"></i> Extract MP4
+                        </button>
+                    </div>
+
+                    <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
+                        Mendukung Facebook Reels (`/reel/`), Facebook Watch (`fb.watch/`), serta link proxy wrapper.
+                    </div>
+                </div>
+            </div>
+
+            <div id="reelsLoader" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
+                <div class="inline-block animate-spin text-pink-500">
+                    <i data-lucide="loader-2" class="w-8 h-8"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-300">Mengekstrak Direct Stream CDN dari Facebook...</p>
+                <p id="reelsLoaderStatus" class="text-[11px] text-slate-500">Memproses token otentikasi CDN & URL signature...</p>
+            </div>
+
+            <div id="reelsResultContainer" class="hidden space-y-6">
+                <!-- Video Stream Live Preview tumpuk lebih dulu -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
+                    <h4 class="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                        <i data-lucide="play" class="w-4 h-4 text-pink-400"></i> Video Stream Live Preview
+                    </h4>
+                    <div class="flex justify-center items-center bg-slate-950 rounded-xl p-2 sm:p-3 border border-slate-800 overflow-hidden">
+                        <video id="reelsVideoPlayer" controls autoplay loop class="max-h-[680px] rounded-lg shadow-lg bg-black w-full max-w-full">
+                            <source id="reelsVideoSource" src="" type="video/mp4">
+                            Browser Anda tidak mendukung pemutaran video langsung.
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Direct FB CDN Video Link (.mp4) tumpuk kedua -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            </span>
+                            <h3 class="text-sm font-semibold text-white">Direct FB CDN Video Link (.mp4)</h3>
+                        </div>
+                        <span class="px-2.5 py-1 bg-pink-500/20 text-pink-300 border border-pink-500/30 rounded-md text-[11px] font-bold">
+                            HD Video Stream
+                        </span>
+                    </div>
+
+                    <div class="relative bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-pink-300 break-all leading-relaxed shadow-inner">
+                        <span id="reelsDirectOutput"></span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2">
+                        <div class="grid grid-cols-1 sm:flex items-center gap-2 w-full sm:w-auto">
+                            <button onclick="copyToClipboard('reelsDirectOutput')" class="px-4 py-2.5 bg-pink-600 hover:bg-pink-500 active:scale-95 text-white rounded-xl text-xs font-semibold transition-all shadow-md flex items-center justify-center gap-2">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Direct MP4 Link
+                            </button>
+                            <a id="reelsDownloadBtn" href="#" target="_blank" rel="noopener noreferrer" download="facebook_reel.mp4" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 rounded-xl text-xs font-semibold transition-all border border-slate-700 flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Buka / Download Video
+                            </a>
+                            <button onclick="sendReelToCleaner()" class="px-3.5 py-2.5 bg-brand-600/30 hover:bg-brand-600/50 active:scale-95 text-brand-300 border border-brand-500/40 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="sliders" class="w-3.5 h-3.5"></i> Inspect Parameters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="batchTab" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-brand-400"></i> Batch Link Sanitizer
+                        </h2>
+                        <p class="text-xs text-slate-400">Paste multiple URLs (one per line) to process them simultaneously</p>
+                    </div>
+                    <button onclick="clearBatchInput()" class="text-xs text-slate-400 hover:text-slate-200">Clear Input</button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                        <input type="checkbox" id="batchUnwrapCheck" checked class="rounded bg-slate-800 border-slate-700 text-brand-600 focus:ring-brand-500">
+                        <span>Unwrap Proxy Links</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                        <input type="checkbox" id="batchStripTrackingCheck" checked class="rounded bg-slate-800 border-slate-700 text-brand-600 focus:ring-brand-500">
+                        <span>Strip Tracking Params</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                        <input type="checkbox" id="batchStripAllCheck" class="rounded bg-slate-800 border-slate-700 text-brand-600 focus:ring-brand-500">
+                        <span>Strip ALL Query Params</span>
+                    </label>
+                </div>
+
+                <textarea id="batchInput" rows="8" placeholder="https://example.com/page?utm_source=fb&fbclid=123&#10;https://proxy.dev/?u=https%3A%2F%2Ftarget.com%3Fref%3Dabc"
+                    class="w-full p-4 bg-slate-950/80 border border-slate-700/80 rounded-xl text-slate-100 font-mono text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-y"></textarea>
+
+                <div class="flex items-center justify-between">
+                    <span id="batchCountBadge" class="text-xs text-slate-400">0 links entered</span>
+                    <button onclick="processBatch()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold transition-all shadow-lg flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i> Sanitize All Links
+                    </button>
+                </div>
+            </div>
+
+            <div id="batchResultsCard" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                    <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="check-check" class="w-4 h-4 text-emerald-400"></i> Sanitized Results
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyAllBatch()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy All
+                        </button>
+                        <button onclick="downloadBatchTXT()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export TXT
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto max-h-[500px]">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] sticky top-0">
+                            <tr>
+                                <th class="p-3 w-10">#</th>
+                                <th class="p-3 w-1/2">Original Link</th>
+                                <th class="p-3 w-1/2">Cleaned Link</th>
+                                <th class="p-3 w-16 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batchTableBody" class="divide-y divide-slate-800/60 font-mono"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="historyTab" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                            <i data-lucide="history" class="w-4 h-4 text-brand-400"></i> Cleaning History
+                        </h2>
+                        <p class="text-xs text-slate-400">Recently processed links stored locally</p>
+                    </div>
+                    <button onclick="clearHistory()" class="px-3 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear History
+                    </button>
+                </div>
+
+                <div id="historyList" class="space-y-3"></div>
+
+                <div id="noHistoryNotice" class="p-8 text-center text-slate-500 text-xs italic">
+                    No cleaning history found yet. Process links in Single or Batch mode to save them here.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 left-4 right-4 sm:left-auto sm:right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex justify-center sm:justify-end">
+        <div class="bg-slate-800 border border-brand-500/50 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-sm w-full sm:w-auto">
+            <span id="toastIcon" class="text-emerald-400"><i data-lucide="check-circle" class="w-5 h-5"></i></span>
+            <span id="toastMessage" class="text-xs font-medium">Link copied to clipboard!</span>
+        </div>
+    </div>
+
+    <script>
+        const SAMPLE_URL = `https://igfetch.ssstoks1.workers.dev/?u=https%3A%2F%2Fvideo-lhr11-1.xx.fbcdn.net%2Fo1%2Fv%2Ft2%2Ff2%2Fm366%2FAQNpkCKUIoaHbYvnK7fCBnAmYcttYDBrvnIPLcqMymkpsbdODh2LFP0KCwKpccvHj0yEpHwSpLCBgYuZoUe85lywiBphI3cgAduULpM_Ov-tMQ.mp4%3F_nc_cat%3D111%26_nc_sid%3D5e9851%26_nc_ht%3Dvideo-lhr11-1.xx.fbcdn.net%26_nc_ohc%3D6aUXwYjAN2EQ7kNvwF5JuhM%26efg%3DeyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMTI4MC5kYXNoX2gyNjQtYmFzaWMtZ2VuMl83MjBwIiwieHB2X2Fzc2V0X2lkIjoxNDk4ODQxODE4NzAxMTM5LCJhc3NldF9hZ2VfZGF5cyI6ODUsInZpX3VzZWNhc2VfaWQiOjEwMTIyLCJkdXJhdGlvbl9zIjoxNTIwLCJ1cmxnZW5fc291cmNlIjoid3d3In0u00253D%26ccb%3D17-1%26vs%3Df28a3571a553a22%26_nc_vs%3DHBksFQIYRWZiX2VwaGVtZXJhbC9EQjRFOTBCNzQxMzJDRDAyMUEwOEU0ODEyQzgwODg4MV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzEyNDcxM0I1Qjc1OTlGMzhFMTJFOUJFQjI3MzA4ODgzX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACam9eziicypBRUCKAJDMywXQJfCPXCj1woYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUCZZSeAQA%26_nc_gid%3Dcj1YKKHiUwkkmjA1qC-MWQ%26_nc_ss%3D70289%26_nc_zt%3D28%26oh%3D00_AQL-w9lHokT32Ee7V0MisIYUinVOVFxlREBWcVPj241RRw%26oe%3D6A9C6991%26bitrate%3D1610911%26tag%3Ddash_h264-basic-gen2_720p`;
+        const SAMPLE_REEL_URL = `https://www.facebook.com/reel/1038481365516562`;
+
+        const TRACKING_PARAMS = new Set([
+            'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 'utm_source_platform',
+            'fbclid', 'gclid', 'gclsrc', 'msclkid', 'mc_eid', 'mc_cid', 'si', 'igshid', '_hsenc', '_hsmi', 
+            'vt', 'ref', 'ref_', 'feature', 'yclid', 'tblci', 'wbraid', 'gbraid', 'twclid', 's_kwcid', '_openstat',
+            'pi', 'uid', 'cmpid', 'c', 'vgo_ee'
+        ]);
+
+        const MEDIA_CDN_PARAMS = new Set([
+            '_nc_cat', '_nc_sid', '_nc_ht', '_nc_ohc', 'efg', 'ccb', 'vs', '_nc_vs', '_nc_gid', '_nc_ss', '_nc_zt', 
+            'oh', 'oe', 'bitrate', 'tag', 'token', 'expires', 'signature', 'sig', 'hmac', 'AWSAccessKeyId', 'Signature', 'Expires'
+        ]);
+
+        const WRAPPER_KEYS = ['u', 'url', 'target', 'redirect', 'dest', 'link', 'q', 'goto', 'to', 'out', 'src', 'continue', 'next', 'r', 'u1'];
+
+        // Dynamic multi-proxy CORS fallback pool with 5-second timeout per attempt
+        const CORS_PROXIES = [
+            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+            url => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`
+        ];
+
+        async function fetchHtmlWithCorsFallback(targetUrl, onStatusUpdate) {
+            let lastError = null;
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxyGen = CORS_PROXIES[i];
+                const proxyUrl = proxyGen(targetUrl);
+                if (onStatusUpdate) {
+                    onStatusUpdate(`Mencoba Proxy CORS #${i + 1}/${CORS_PROXIES.length}...`);
+                }
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout 5 detik per proxy
+                    const response = await fetch(proxyUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        const html = await response.text();
+                        if (html && html.trim().length > 100) {
+                            return html;
+                        }
+                    }
+                } catch (err) {
+                    console.warn(`CORS Proxy ${i + 1} gagal/timeout:`, err);
+                    lastError = err;
+                }
+            }
+            throw new Error(lastError ? "Semua server proxy CORS publik gagal merespons." : "Gagal mengambil HTML dari proxy CORS.");
+        }
+
+        let currentUnwrappedBase = '';
+        let currentParamsList = [];
+        let currentOriginalUrl = '';
+
+        window.onload = function() {
+            lucide.createIcons();
+            loadHistoryFromStorage();
+
+            document.getElementById('urlInput').addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    processSingleUrl(this.value.trim());
+                }
+            });
+
+            document.getElementById('batchInput').addEventListener('input', function() {
+                const lines = this.value.split('\n').filter(l => l.trim().length > 0);
+                document.getElementById('batchCountBadge').innerText = `${lines.length} links entered`;
+            });
+        };
+
+        function cleanAndUnwrapUrl(rawUrl, depth = 0) {
+            if (!rawUrl || depth > 5) return rawUrl;
+
+            let cleaned = rawUrl.trim();
+            // Fix double percent encoding and broken Facebook escaping
+            cleaned = cleaned.replace(/\.00253D/gi, '%3D').replace(/%253D/gi, '%3D').replace(/\\u00253D/gi, '%3D').replace(/\\u0026/gi, '&');
+
+            try {
+                if (cleaned.includes('%25')) {
+                    cleaned = decodeURIComponent(cleaned);
+                }
+            } catch (e) {}
+
+            try {
+                let urlObj;
+                if (!cleaned.match(/^https?:\/\//i)) {
+                    urlObj = new URL('https://' + cleaned);
+                } else {
+                    urlObj = new URL(cleaned);
+                }
+
+                let nestedTarget = null;
+                for (const key of WRAPPER_KEYS) {
+                    const paramVal = urlObj.searchParams.get(key);
+                    if (paramVal && (paramVal.startsWith('http://') || paramVal.startsWith('https://') || paramVal.includes('%3A%2F%2F'))) {
+                        nestedTarget = paramVal;
+                        break;
+                    }
+                }
+
+                if (nestedTarget) {
+                    try {
+                        nestedTarget = decodeURIComponent(nestedTarget);
+                    } catch(e) {}
+                    return cleanAndUnwrapUrl(nestedTarget, depth + 1);
+                }
+
+                return urlObj.toString();
+            } catch (e) {
+                return cleaned;
+            }
+        }
+
+        function parseUrlStructure(targetUrl) {
+            let urlObj;
+            try {
+                urlObj = new URL(targetUrl);
+            } catch (e) {
+                return null;
+            }
+
+            const baseWithoutParams = urlObj.origin + urlObj.pathname;
+            const params = [];
+
+            urlObj.searchParams.forEach((value, key) => {
+                let decodedVal = value;
+                try {
+                    decodedVal = decodeURIComponent(value);
+                } catch(e) {}
+
+                let type = 'general';
+                if (TRACKING_PARAMS.has(key.toLowerCase()) || key.toLowerCase().startsWith('utm_')) {
+                    type = 'tracking';
+                } else if (MEDIA_CDN_PARAMS.has(key) || key.startsWith('_nc_')) {
+                    type = 'cdn';
+                }
+
+                params.push({
+                    key: key,
+                    val: decodedVal,
+                    rawVal: value,
+                    active: type !== 'tracking',
+                    type: type
+                });
+            });
+
+            return {
+                base: baseWithoutParams,
+                hash: urlObj.hash,
+                params: params,
+                protocol: urlObj.protocol,
+                hostname: urlObj.hostname
+            };
+        }
+
+        function processSingleUrl(rawUrl) {
+            if (!rawUrl.trim()) return;
+
+            if ((rawUrl.includes('facebook.com/reel/') || rawUrl.includes('fb.watch/')) && !rawUrl.includes('fbcdn.net')) {
+                showToast("Mendeteksi Link Facebook Reel! Mengalihkan ke Extractor...", false);
+                switchTab('reels');
+                document.getElementById('reelsUrlInput').value = rawUrl;
+                extractReelDirectLink();
+                return;
+            }
+
+            currentOriginalUrl = rawUrl;
+            const unwrapped = cleanAndUnwrapUrl(rawUrl);
+            const parsed = parseUrlStructure(unwrapped);
+
+            if (!parsed) {
+                showToast("Invalid URL format", true);
+                return;
+            }
+
+            currentUnwrappedBase = parsed.base;
+            currentParamsList = parsed.params;
+
+            document.getElementById('resultsContainer').classList.remove('hidden');
+            renderCleanedOutput();
+            renderParamTable();
+            checkMediaPreview(getRebuiltUrl());
+
+            saveToHistory(rawUrl, getRebuiltUrl());
+        }
+
+        function getRebuiltUrl() {
+            if (!currentUnwrappedBase) return '';
+            const activeParams = currentParamsList.filter(p => p.active);
+            if (activeParams.length === 0) return currentUnwrappedBase;
+
+            const searchParams = new URLSearchParams();
+            activeParams.forEach(p => {
+                searchParams.append(p.key, p.rawVal);
+            });
+            return currentUnwrappedBase + '?' + searchParams.toString();
+        }
+
+        function renderCleanedOutput() {
+            const finalUrl = getRebuiltUrl();
+            document.getElementById('outputUrl').innerText = finalUrl;
+            document.getElementById('openLinkBtn').href = finalUrl;
+
+            const isUnwrapped = currentOriginalUrl.length > currentUnwrappedBase.length && currentOriginalUrl !== finalUrl;
+            const removedParamsCount = currentParamsList.filter(p => !p.active).length;
+
+            let badgesHtml = '';
+            if (isUnwrapped) {
+                badgesHtml += `<span class="px-2 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-medium flex items-center gap-1"><i data-lucide="unfold-horizontal" class="w-3 h-3"></i> Redirect Unwrapped</span>`;
+            }
+            if (removedParamsCount > 0) {
+                badgesHtml += `<span class="px-2 py-1 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[11px] font-medium flex items-center gap-1"><i data-lucide="scissors" class="w-3 h-3"></i> ${removedParamsCount} Params Stripped</span>`;
+            }
+            document.getElementById('statsBadges').innerHTML = badgesHtml;
+
+            const charSaved = currentOriginalUrl.length - finalUrl.length;
+            if (charSaved > 0) {
+                document.getElementById('lengthDiff').innerText = `Reduced length by ${charSaved} characters`;
+            } else {
+                document.getElementById('lengthDiff').innerText = `Cleaned format`;
+            }
+
+            if (!document.getElementById('qrContainer').classList.contains('hidden')) {
+                generateQRCode(finalUrl);
+            }
+            lucide.createIcons();
+        }
+
+        function renderParamTable() {
+            const tbody = document.getElementById('paramTableBody');
+            const notice = document.getElementById('noParamsNotice');
+            tbody.innerHTML = '';
+
+            if (currentParamsList.length === 0) {
+                notice.classList.remove('hidden');
+                return;
+            }
+            notice.classList.add('hidden');
+
+            currentParamsList.forEach((param, index) => {
+                const tr = document.createElement('tr');
+                tr.className = param.active ? "hover:bg-slate-800/40 transition-colors" : "opacity-50 hover:bg-slate-800/40 transition-colors bg-slate-950/40";
+                
+                let categoryBadge = '';
+                if (param.type === 'tracking') {
+                    categoryBadge = `<span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px]">Tracking</span>`;
+                } else if (param.type === 'cdn') {
+                    categoryBadge = `<span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px]">CDN Token</span>`;
+                } else {
+                    categoryBadge = `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]">General</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center">
+                        <input type="checkbox" ${param.active ? 'checked' : ''} onchange="toggleParam(${index})" class="rounded bg-slate-800 border-slate-700 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                    </td>
+                    <td class="p-3 font-semibold text-slate-200 break-all">${escapeHtml(param.key)}</td>
+                    <td class="p-3">${categoryBadge}</td>
+                    <td class="p-3 text-slate-400 break-all" title="${escapeHtml(param.val)}">${escapeHtml(param.val)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleParam(index) {
+            currentParamsList[index].active = !currentParamsList[index].active;
+            renderCleanedOutput();
+            renderParamTable();
+            checkMediaPreview(getRebuiltUrl());
+        }
+
+        function toggleAllParams(status) {
+            currentParamsList.forEach(p => p.active = status);
+            renderCleanedOutput();
+            renderParamTable();
+            checkMediaPreview(getRebuiltUrl());
+        }
+
+        function deselectTrackingOnly() {
+            currentParamsList.forEach(p => {
+                p.active = (p.type !== 'tracking');
+            });
+            renderCleanedOutput();
+            renderParamTable();
+            checkMediaPreview(getRebuiltUrl());
+        }
+
+        function applyPreset(preset) {
+            if (preset === 'smart') {
+                deselectTrackingOnly();
+                showToast("Applied Smart Clean preset!");
+            } else if (preset === 'unwrap') {
+                currentParamsList.forEach(p => p.active = true);
+                renderCleanedOutput();
+                renderParamTable();
+                checkMediaPreview(getRebuiltUrl());
+                showToast("Unwrapped direct target!");
+            } else if (preset === 'base') {
+                toggleAllParams(false);
+                showToast("Stripped all parameters!");
+            }
+        }
+
+        async function extractReelDirectLink() {
+            const inputUrl = document.getElementById('reelsUrlInput').value.trim();
+            if (!inputUrl) {
+                showToast("Silakan masukkan URL Facebook Reel!", true);
+                return;
+            }
+
+            const reelsLoader = document.getElementById('reelsLoader');
+            const reelsResult = document.getElementById('reelsResultContainer');
+            const loaderStatus = document.getElementById('reelsLoaderStatus');
+
+            reelsLoader.classList.remove('hidden');
+            reelsResult.classList.add('hidden');
+            if (loaderStatus) loaderStatus.innerText = "Memproses token otentikasi CDN & URL signature...";
+
+            let directMp4Url = "";
+
+            try {
+                // Strategy 1: Direct wrapper unwrapping (e.g., worker links containing ?u= or fbcdn)
+                if (inputUrl.includes('fbcdn.net') || inputUrl.includes('video-') || inputUrl.includes('u=')) {
+                    directMp4Url = cleanAndUnwrapUrl(inputUrl);
+                } 
+                
+                // Strategy 2: Attempt Cobalt API resolver
+                if (!directMp4Url || !directMp4Url.includes('fbcdn.net')) {
+                    try {
+                        if (loaderStatus) loaderStatus.innerText = "Menghubungkan ke API Resolver...";
+                        const cobaltResp = await fetch('https://api.cobalt.tools/', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ url: inputUrl })
+                        });
+                        if (cobaltResp.ok) {
+                            const cobaltData = await cobaltResp.json();
+                            if (cobaltData.url && cobaltData.url.includes('fbcdn')) {
+                                directMp4Url = cobaltData.url;
+                            }
+                        }
+                    } catch (err) {
+                        console.log("Cobalt resolver skipped, falling back to multi-CORS proxy scraper...");
+                    }
+                }
+
+                // Strategy 3: HTML Scraper using Multi-Proxy CORS Fallback Pool
+                if (!directMp4Url || !directMp4Url.includes('fbcdn.net')) {
+                    try {
+                        const html = await fetchHtmlWithCorsFallback(inputUrl, (msg) => {
+                            if (loaderStatus) loaderStatus.innerText = msg;
+                        });
+                        const extracted = extractFbCdnFromText(html);
+                        if (extracted) directMp4Url = extracted;
+                    } catch (err) {
+                        console.log("Multi-CORS proxy scraper skipped:", err.message);
+                    }
+                }
+
+                // Demo fallback for sample reel URL
+                if (inputUrl === SAMPLE_REEL_URL && (!directMp4Url || !directMp4Url.includes('fbcdn.net'))) {
+                    directMp4Url = cleanAndUnwrapUrl(SAMPLE_URL);
+                }
+
+                if (!directMp4Url || (!directMp4Url.includes('fbcdn.net') && !directMp4Url.includes('.mp4'))) {
+                    throw new Error("Gagal mengekstrak direct link. Video mungkin diprivat atau diblokir oleh CORS Facebook.");
+                }
+
+                directMp4Url = cleanAndUnwrapUrl(directMp4Url);
+
+                document.getElementById('reelsDirectOutput').innerText = directMp4Url;
+                document.getElementById('reelsDownloadBtn').href = directMp4Url;
+
+                const videoPlayer = document.getElementById('reelsVideoPlayer');
+                const videoSource = document.getElementById('reelsVideoSource');
+                videoSource.src = directMp4Url;
+                videoPlayer.load();
+
+                reelsLoader.classList.add('hidden');
+                reelsResult.classList.remove('hidden');
+                showToast("Direct MP4 Stream berhasil diekstrak!");
+
+                saveToHistory(inputUrl, directMp4Url);
+
+            } catch (err) {
+                console.error("Extraction error:", err);
+                reelsLoader.classList.add('hidden');
+                showToast(err.message || "Gagal mengekstrak video. Periksa URL Anda.", true);
+            }
+        }
+
+        function extractFbCdnFromText(text) {
+            if (!text) return null;
+            let clean = text.replace(/\\/g, '');
+            let hdMatch = clean.match(/"browser_native_hd_url"\s*:\s*"([^"]+)"/) ||
+                          clean.match(/"playable_url_quality_hd"\s*:\s*"([^"]+)"/) ||
+                          clean.match(/"playable_url"\s*:\s*"([^"]+)"/);
+            if (hdMatch && hdMatch[1]) {
+                return cleanAndUnwrapUrl(hdMatch[1].replace(/&amp;/g, '&'));
+            }
+            let mp4Match = clean.match(/https?:\/\/[^"'\s\\]*video-[^"'\s\\]*\.mp4[^"'\s\\]*/i);
+            if (mp4Match) {
+                return cleanAndUnwrapUrl(mp4Match[0].replace(/&amp;/g, '&'));
+            }
+            return null;
+        }
+
+        function checkMediaPreview(urlStr) {
+            const mediaCard = document.getElementById('mediaPreviewCard');
+            const mediaContainer = document.getElementById('mediaContainer');
+            const mediaBadge = document.getElementById('mediaTypeBadge');
+
+            const lower = urlStr.toLowerCase();
+            const isVideo = lower.includes('.mp4') || lower.includes('.webm') || lower.includes('.ogv');
+            const isAudio = lower.includes('.mp3') || lower.includes('.m4a') || lower.includes('.wav');
+            const isImage = lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png') || lower.includes('.webp') || lower.includes('.gif');
+
+            if (isVideo) {
+                mediaCard.classList.remove('hidden');
+                mediaBadge.innerText = "MP4 Video Stream";
+                mediaContainer.innerHTML = `
+                    <video controls autoplay loop muted class="max-h-[680px] w-full rounded-lg bg-black object-contain">
+                        <source src="${urlStr}" type="video/mp4">
+                        Your browser does not support HTML5 video preview.
+                    </video>
+                `;
+            } else if (isAudio) {
+                mediaCard.classList.remove('hidden');
+                mediaBadge.innerText = "Audio Stream";
+                mediaContainer.innerHTML = `
+                    <audio controls class="w-full max-w-md my-4">
+                        <source src="${urlStr}">
+                        Your browser does not support HTML5 audio.
+                    </audio>
+                `;
+            } else if (isImage) {
+                mediaCard.classList.remove('hidden');
+                mediaBadge.innerText = "Direct Image";
+                mediaContainer.innerHTML = `
+                    <img src="${urlStr}" alt="Media Preview" class="max-h-80 object-contain rounded-lg" onerror="this.onerror=null; this.src='https://placehold.co/600x300/0f172a/6366f1?text=Preview+Unavailable';">
+                `;
+            } else {
+                mediaCard.classList.add('hidden');
+                mediaContainer.innerHTML = '';
+            }
+        }
+
+        function processBatch() {
+            const rawText = document.getElementById('batchInput').value.trim();
+            if (!rawText) {
+                showToast("Please enter URLs in the textarea", true);
+                return;
+            }
+
+            const unwrap = document.getElementById('batchUnwrapCheck').checked;
+            const stripTracking = document.getElementById('batchStripTrackingCheck').checked;
+            const stripAll = document.getElementById('batchStripAllCheck').checked;
+
+            const lines = rawText.split('\n').filter(l => l.trim().length > 0);
+            const tbody = document.getElementById('batchTableBody');
+            tbody.innerHTML = '';
+
+            lines.forEach((line, index) => {
+                let target = line.trim();
+                if (unwrap) {
+                    target = cleanAndUnwrapUrl(target);
+                }
+
+                if (stripAll) {
+                    try {
+                        const u = new URL(target);
+                        target = u.origin + u.pathname;
+                    } catch(e) {}
+                } else if (stripTracking) {
+                    const parsed = parseUrlStructure(target);
+                    if (parsed) {
+                        const activeParams = parsed.params.filter(p => p.type !== 'tracking');
+                        if (activeParams.length === 0) {
+                            target = parsed.base;
+                        } else {
+                            const sp = new URLSearchParams();
+                            activeParams.forEach(p => sp.append(p.key, p.rawVal));
+                            target = parsed.base + '?' + sp.toString();
+                        }
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3 text-slate-500">${index + 1}</td>
+                    <td class="p-3 text-slate-400 break-all text-[11px]" title="${escapeHtml(line)}">${escapeHtml(line)}</td>
+                    <td class="p-3 text-emerald-300 font-medium break-all text-[11px]" title="${escapeHtml(target)}">${escapeHtml(target)}</td>
+                    <td class="p-3 text-right align-top">
+                        <button onclick="copyText('${escapeHtml(target)}')" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md transition-all mt-1">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('batchResultsCard').classList.remove('hidden');
+            lucide.createIcons();
+            showToast(`Sanitized ${lines.length} URLs successfully!`);
+        }
+
+        function copyAllBatch() {
+            const rows = document.querySelectorAll('#batchTableBody tr');
+            const cleanLinks = [];
+            rows.forEach(r => {
+                const cleanCell = r.children[2];
+                if (cleanCell) cleanLinks.push(cleanCell.innerText);
+            });
+
+            if (cleanLinks.length === 0) return;
+            copyText(cleanLinks.join('\n'));
+        }
+
+        function downloadBatchTXT() {
+            const rows = document.querySelectorAll('#batchTableBody tr');
+            const cleanLinks = [];
+            rows.forEach(r => {
+                const cleanCell = r.children[2];
+                if (cleanCell) cleanLinks.push(cleanCell.innerText);
+            });
+
+            if (cleanLinks.length === 0) return;
+
+            const blob = new Blob([cleanLinks.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sanitized_links_${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function saveToHistory(orig, cleaned) {
+            let history = JSON.parse(localStorage.getItem('link_cleaner_history') || '[]');
+            if (history.length > 0 && history[0].cleaned === cleaned) return;
+
+            history.unshift({
+                orig: orig,
+                cleaned: cleaned,
+                timestamp: new Date().toLocaleTimeString()
+            });
+
+            if (history.length > 30) history = history.slice(0, 30);
+            localStorage.setItem('link_cleaner_history', JSON.stringify(history));
+            loadHistoryFromStorage();
+        }
+
+        function loadHistoryFromStorage() {
+            const history = JSON.parse(localStorage.getItem('link_cleaner_history') || '[]');
+            const container = document.getElementById('historyList');
+            const noHist = document.getElementById('noHistoryNotice');
+
+            container.innerHTML = '';
+            if (history.length === 0) {
+                noHist.classList.remove('hidden');
+                return;
+            }
+            noHist.classList.add('hidden');
+
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-950 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition-all";
+                div.innerHTML = `
+                    <div class="space-y-1 font-mono text-xs overflow-hidden">
+                        <div class="text-emerald-400 font-semibold truncate">${escapeHtml(item.cleaned)}</div>
+                        <div class="text-slate-500 truncate text-[11px]">${escapeHtml(item.orig)}</div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-[10px] text-slate-500 font-mono">${item.timestamp}</span>
+                        <button onclick="copyText('${escapeHtml(item.cleaned)}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition-all flex items-center gap-1">
+                            <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('link_cleaner_history');
+            loadHistoryFromStorage();
+            showToast("Cleaning history cleared!");
+        }
+
+        function loadSampleReel() {
+            document.getElementById('reelsUrlInput').value = SAMPLE_REEL_URL;
+            extractReelDirectLink();
+        }
+
+        function sendReelToCleaner() {
+            const reelsUrl = document.getElementById('reelsDirectOutput').innerText;
+            switchTab('single');
+            document.getElementById('urlInput').value = reelsUrl;
+            processSingleUrl(reelsUrl);
+        }
+
+        function loadSampleLink() {
+            document.getElementById('urlInput').value = SAMPLE_URL;
+            processSingleUrl(SAMPLE_URL);
+            showToast("Sample Facebook CDN video wrapper loaded!");
+        }
+
+        function clearSingleInput() {
+            document.getElementById('urlInput').value = '';
+            document.getElementById('resultsContainer').classList.add('hidden');
+        }
+
+        function clearBatchInput() {
+            document.getElementById('batchInput').value = '';
+            document.getElementById('batchResultsCard').classList.add('hidden');
+            document.getElementById('batchCountBadge').innerText = "0 links entered";
+        }
+
+        async function pasteAndClean() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('urlInput').value = text;
+                    processSingleUrl(text);
+                    showToast("Pasted link from clipboard!");
+                }
+            } catch (err) {
+                showToast("Please paste manually using keyboard", true);
+            }
+        }
+
+        function copyToClipboard(elemId) {
+            const text = document.getElementById(elemId).innerText;
+            copyText(text);
+        }
+
+        function copyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Copied to clipboard!");
+            } catch (err) {
+                showToast("Failed to copy", true);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function toggleQRCode() {
+            const container = document.getElementById('qrContainer');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                generateQRCode(getRebuiltUrl());
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function generateQRCode(text) {
+            const qrdiv = document.getElementById('qrcode');
+            qrdiv.innerHTML = '';
+            new QRCode(qrdiv, {
+                text: text,
+                width: 140,
+                height: 140,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function switchTab(tab) {
+            document.getElementById('singleTab').classList.add('hidden');
+            document.getElementById('reelsTab').classList.add('hidden');
+            document.getElementById('batchTab').classList.add('hidden');
+            document.getElementById('historyTab').classList.add('hidden');
+
+            document.getElementById('tabSingleBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0";
+            document.getElementById('tabReelsBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0";
+            document.getElementById('tabBatchBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0";
+            document.getElementById('tabHistoryBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all shrink-0";
+
+            if (tab === 'single') {
+                document.getElementById('singleTab').classList.remove('hidden');
+                document.getElementById('tabSingleBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-brand-600 text-white shadow shrink-0";
+            } else if (tab === 'reels') {
+                document.getElementById('reelsTab').classList.remove('hidden');
+                document.getElementById('tabReelsBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-pink-600 text-white shadow shrink-0";
+            } else if (tab === 'batch') {
+                document.getElementById('batchTab').classList.remove('hidden');
+                document.getElementById('tabBatchBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-brand-600 text-white shadow shrink-0";
+            } else if (tab === 'history') {
+                document.getElementById('historyTab').classList.remove('hidden');
+                document.getElementById('tabHistoryBtn').className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-brand-600 text-white shadow shrink-0";
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (isError) {
+                toastIcon.className = "text-rose-400";
+                toastIcon.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i>`;
+            } else {
+                toastIcon.className = "text-emerald-400";
+                toastIcon.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5"></i>`;
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
