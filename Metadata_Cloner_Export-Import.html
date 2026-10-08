@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Metadata Cloner</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/piexifjs/1.0.6/piexif.min.js"></script>
+<style>
+:root{
+  --bg:#e8edeb; --surface:#f6f9f8; --ink:#13202a; --muted:#566670; --line:#c3cecb;
+  --accent:#0e5a63; --accent-ink:#ffffff; --flag:#9a3d08; --flag-bg:#fbe8d8; --ok-bg:#d9eae6; --err:#a11d2e;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e161b; --surface:#16222a; --ink:#e3ecee; --muted:#93a4ad; --line:#2a3943;
+    --accent:#5cc3cb; --accent-ink:#06242a; --flag:#f2a46b; --flag-bg:#3a2514; --ok-bg:#183037; --err:#ff8b98;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e161b; --surface:#16222a; --ink:#e3ecee; --muted:#93a4ad; --line:#2a3943;
+  --accent:#5cc3cb; --accent-ink:#06242a; --flag:#f2a46b; --flag-bg:#3a2514; --ok-bg:#183037; --err:#ff8b98;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 64px}
+h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0 0 10px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.15rem;margin:0 0 2px;font-weight:700}
+.lede{color:var(--muted);margin:0 0 26px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.slot{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.slot p{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+.drop{display:flex;align-items:center;justify-content:center;text-align:center;min-height:132px;border:2px dashed var(--line);border-radius:8px;cursor:pointer;color:var(--muted);padding:12px;overflow:hidden;position:relative}
+.drop:hover,.drop.over,.drop:focus-within{border-color:var(--accent);color:var(--ink)}
+.drop img,.drop video{max-width:100%;max-height:260px;display:block;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);opacity:0}
+.fileinfo{margin-top:8px;font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin:16px 0;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+button{font:inherit;font-weight:700;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);padding:9px 16px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,.drop:focus-within,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--muted);margin-left:auto}
+.opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+#status{flex-basis:100%;font-size:.92rem;min-height:1.4em;margin:0}
+#status.err{color:var(--err)} #status.ok{color:var(--accent)}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel.wide{grid-column:1/-1}
+.panel h3{margin:0 0 10px;font-size:1.05rem}
+.verdict{border-radius:8px;padding:10px 12px;margin-bottom:12px;background:var(--ok-bg)}
+.verdict.flag{background:var(--flag-bg);color:var(--flag)}
+.verdict strong{display:block}
+.verdict ul{margin:6px 0 0;padding-left:18px;color:var(--ink)}
+.verdict small{display:block;margin-top:6px;color:var(--muted)}
+.find{width:100%;padding:8px 10px;margin-bottom:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+details{border-top:1px solid var(--line);padding:6px 0}
+summary{cursor:pointer;font-weight:700;padding:4px 0}
+table{width:100%;border-collapse:collapse;font-size:.88rem;table-layout:fixed}
+td{padding:4px 6px;vertical-align:top;border-top:1px solid var(--line);overflow-wrap:anywhere;word-break:break-word}
+td:first-child{width:38%;color:var(--muted)}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;max-height:260px;overflow:auto;background:var(--bg);padding:10px;border-radius:6px}
+.note{margin-top:22px;font-size:.9rem;color:var(--muted);max-width:80ch}
+.note code{background:var(--surface);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.scrollx{overflow-x:auto}
+@media (max-width:760px){.pair,.results{grid-template-columns:1fr}.opts{margin-left:0}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Metadata Cloner</h1>
+  <p class="lede">Salin EXIF dari satu gambar ke gambar lain, dan periksa apakah sebuah file membawa penanda AI. Sumber bisa dari upload gambar <em>atau</em> file JSON metadata (export/import). Saat memproses, <strong>semua metadata target dihapus dulu</strong> (termasuk penanda AI seperti XMP/C2PA), lalu diganti dengan metadata sumber. Semua diproses di browser Anda; file tidak diunggah ke server.</p>
+
+  <section class="pair" aria-label="Unggah file">
+    <div class="slot">
+      <h2>1. Sumber</h2>
+      <p>Gambar/video yang metadatanya diambil, <em>atau</em> impor file JSON metadata.</p>
+      <label class="drop" id="drop-src" for="f-src"><span>Pilih atau seret gambar/video ke sini</span></label>
+      <input class="sr" type="file" id="f-src" accept="image/*,video/*">
+      <div class="fileinfo" id="info-src"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+        <button type="button" id="btn-export-json" disabled style="font-size:.85rem;padding:6px 12px">Export JSON</button>
+        <label class="drop" id="drop-json" for="f-json" style="min-height:auto;padding:6px 12px;border-style:solid;font-size:.85rem;font-weight:700;color:var(--accent);border-color:var(--accent);flex:1;cursor:pointer"><span>Import JSON metadata</span></label>
+        <input class="sr" type="file" id="f-json" accept=".json,application/json">
+      </div>
+    </div>
+    <div class="slot">
+      <h2>2. Target</h2>
+      <p>Gambar atau video yang metadatanya dihapus lalu diganti dengan metadata sumber.</p>
+      <label class="drop" id="drop-tgt" for="f-tgt"><span>Pilih atau seret file ke sini</span></label>
+      <input class="sr" type="file" id="f-tgt" accept="image/*,video/*">
+      <div class="fileinfo" id="info-tgt"></div>
+    </div>
+  </section>
+
+  <div class="bar">
+    <button id="btn-read" disabled>3. Ambil data</button>
+    <button id="btn-proc" class="primary" disabled>4. Proses</button>
+    <button id="btn-dl" disabled>5. Unduh hasil</button>
+    <div class="opts">
+      <label><input type="checkbox" id="o-geo" checked> Pertahankan orientasi dan ukuran target</label>
+      <label><input type="checkbox" id="o-thumb" checked> Buang thumbnail sumber</label>
+      <label><input type="checkbox" id="o-gps" checked> Salin lokasi GPS</label>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </div>
+
+  <section class="results" id="results" aria-label="Hasil pembacaan">
+    <div class="panel" id="panel-src" hidden></div>
+    <div class="panel" id="panel-tgt" hidden></div>
+    <div class="panel wide" id="panel-out" hidden></div>
+  </section>
+
+  <div class="note">
+    <p><strong>Export / Import JSON.</strong> Setelah membaca sumber, klik <em>Export JSON</em> untuk menyimpan EXIF ke file <code>.json</code>. File itu bisa diimpor lagi lewat <em>Import JSON metadata</em> (tanpa perlu upload gambar sumber). Berguna untuk menyimpan profil kamera atau membagikan metadata antar sesi.</p>
+    <p><strong>Cara kerja proses.</strong> Target JPEG: semua segmen metadata (APP0–APP15, COM, XMP, C2PA/JUMBF, IPTC, EXIF lama, dll.) dihapus, kemudian EXIF dari sumber (gambar atau JSON) disisipkan. Target PNG/WebP: di-encode ulang ke JPEG (kualitas 95) sehingga metadata asli hilang, lalu EXIF sumber ditulis. Hasil hanya berisi metadata sumber (plus orientasi/ukuran target jika opsi dicentang).</p>
+    <p><strong>Batasan.</strong> Salin EXIF penuh bekerja untuk target JPEG/PNG/WebP (hasil selalu JPEG). Video bisa dibaca dan diperiksa di sini, tetapi menyalin metadata video butuh ffmpeg atau exiftool. Contoh perintahnya:</p>
+    <p><code>exiftool -tagsFromFile sumber.mp4 -all:all -overwrite_original target.mp4</code><br>
+       <code>ffmpeg -i target.mp4 -i sumber.mp4 -map 0 -map_metadata 1 -c copy hasil.mp4</code></p>
+    <p><strong>Tentang deteksi AI.</strong> Pemeriksaan hanya membaca metadata (C2PA, XMP, teks PNG, tag EXIF). Metadata mudah dihapus atau dipalsukan, jadi hasil bersih tidak membuktikan bahwa gambar itu asli. Menyalin EXIF juga tidak membuat gambar menjadi foto kamera. Alat ini <strong>menghapus</strong> penanda AI dari target sebelum menulis metadata sumber, tetapi tidak memalsukan tanda tangan kriptografi Content Credentials.</p>
+  </div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const state={src:null,tgt:null,out:null};
+
+function toBin(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return s;}
+function binToBytes(s){const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+function u8dec(s){try{return decodeURIComponent(escape(s));}catch(e){return s;}}
+function fmtSize(n){return n>1048576?(n/1048576).toFixed(2)+' MB':(n/1024).toFixed(1)+' KB';}
+function setStatus(msg,kind){const s=$('#status');s.textContent=msg||'';s.className=kind||'';}
+
+/* ---------- AI marker rules ---------- */
+const AI_RULES=[
+ ['Content Credentials (C2PA)',/c2pa|jumbf|contentauth|content credentials/i],
+ ['IPTC: sumber digital berupa media AI',/trainedAlgorithmicMedia|compositeWithTrainedAlgorithmicMedia|compositeSynthetic|algorithmicMedia/i],
+ ['Stable Diffusion / ComfyUI / A1111',/stable.?diffusion|automatic1111|invokeai|comfyui|fooocus|novelai|\bsdxl\b|civitai|"class_type"/i],
+ ['Parameter prompt generator',/Negative prompt:|Steps: \d+, Sampler|CFG scale: \d/i],
+ ['Midjourney',/midjourney|\bniji\b/i],
+ ['OpenAI (DALL·E / Sora)',/\bdall[-·. ]?e\b|openai|\bsora\b|gpt-?image/i],
+ ['Adobe Firefly',/firefly/i],
+ ['Google (Imagen / Gemini / Veo)',/synthid|\bimagen\b|\bgemini\b|\bveo\b|google ai/i],
+ ['Generator lain',/leonardo\.ai|ideogram|playground ?ai|runwayml|\bkling\b|luma ?dream|hailuo|black forest|\bflux[.\- ]?(1|dev|schnell|pro)|krea\.ai|microsoft designer|bing image creator/i]
+];
+function detectAI(text){
+  const hits=[];
+  for(const [label,re] of AI_RULES){const m=text.match(re);if(m)hits.push({label,evidence:m[0].slice(0,60)});}
+  return hits;
+}
+
+/* ---------- EXIF display ---------- */
+const IFDS=[['0th','Gambar (IFD0)','Image'],['Exif','Exif','Exif'],['GPS','GPS','GPS'],['Interop','Interoperabilitas','Interop'],['1st','Thumbnail (IFD1)','Image']];
+function fmtVal(v,type){
+  if(v==null)return '';
+  if(typeof v==='string'){
+    const t=v.replace(/\0+$/,'');
+    if(!/^[\x20-\x7E\u00A0-\uFFFF\n\r\t]*$/.test(t)){
+      return '[biner '+v.length+' byte] '+[...v.slice(0,24)].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join(' ')+(v.length>24?' …':'');
+    }
+    return u8dec(t).slice(0,400);
+  }
+  if(typeof v==='number')return String(v);
+  if(Array.isArray(v)){
+    if(type==='Rational'||type==='SRational'){
+      const pairs=Array.isArray(v[0])?v:[v];
+      return pairs.map(p=>{const n=p[0],d=p[1];return (d===1||d===0)?String(n):n+'/'+d+' (≈'+(+(n/d).toFixed(4))+')';}).join(', ');
+    }
+    return v.map(x=>Array.isArray(x)?x.join('/'):x).join(', ');
+  }
+  return String(v);
+}
+function gpsRow(ex){
+  try{
+    const g=ex&&ex.GPS;if(!g||!g[2]||!g[4])return null;
+    const dms=a=>a[0][0]/a[0][1]+a[1][0]/a[1][1]/60+a[2][0]/a[2][1]/3600;
+    let lat=dms(g[2]),lon=dms(g[4]);
+    if(g[1]==='S')lat=-lat;if(g[3]==='W')lon=-lon;
+    if(isNaN(lat)||isNaN(lon))return null;
+    return ['Koordinat (desimal)',lat.toFixed(6)+', '+lon.toFixed(6)];
+  }catch(e){return null;}
+}
+function exifSections(ex){
+  const out=[];
+  for(const [k,title,grp] of IFDS){
+    const ifd=ex&&ex[k];if(!ifd)continue;
+    const rows=[];
+    for(const t of Object.keys(ifd)){
+      const def=piexif.TAGS[grp]&&piexif.TAGS[grp][t];
+      const name=def?def.name:'Tag 0x'+(+t).toString(16);
+      let v=ifd[t];
+      if(name==='UserComment'&&typeof v==='string'&&v.length>8)v=v.slice(8);
+      rows.push([name,fmtVal(v,def&&def.type)]);
+    }
+    if(k==='GPS'){const r=gpsRow(ex);if(r)rows.unshift(r);}
+    if(k==='1st'&&ex.thumbnail)rows.push(['Thumbnail JPEG',(ex.thumbnail.length/1024).toFixed(1)+' KB']);
+    if(rows.length)out.push({title,rows});
+  }
+  return out;
+}
+function fakeJpegFromTiff(bytes){
+  let b=bytes;
+  const hd=String.fromCharCode(...b.subarray(0,6));
+  if(hd==='Exif\0\0')b=b.subarray(6);
+  const payload='Exif\0\0'+toBin(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength));
+  const len=payload.length+2;
+  if(len>65535)throw new Error('blok EXIF terlalu besar');
+  return '\xFF\xD8\xFF\xE1'+String.fromCharCode(len>>8,len&255)+payload+'\xFF\xD9';
+}
+
+/* ---------- format readers ---------- */
+async function sniff(file){
+  const h=new Uint8Array(await file.slice(0,16).arrayBuffer());
+  if(h[0]===0xFF&&h[1]===0xD8)return 'jpeg';
+  if(h[0]===0x89&&h[1]===0x50&&h[2]===0x4E&&h[3]===0x47)return 'png';
+  const t=String.fromCharCode(...h);
+  if(t.startsWith('RIFF')&&t.substr(8,4)==='WEBP')return 'webp';
+  if(t.substr(4,4)==='ftyp')return 'mp4';
+  if((file.type||'').startsWith('video/'))return 'video';
+  return 'unknown';
+}
+
+async function readJPEG(file,meta){
+  const bin=toBin(await file.arrayBuffer());
+  try{meta.exifObj=piexif.load(bin);}catch(e){meta.exifObj=null;meta.notes.push('EXIF tidak terbaca: '+e.message);}
+  const segs=[];let scan='';let i=2;
+  while(i<bin.length-4){
+    if(bin.charCodeAt(i)!==0xFF)break;
+    const m=bin.charCodeAt(i+1);
+    if(m===0xDA)break;
+    if(m===0xFF){i++;continue;}
+    if(m===0x01||(m>=0xD0&&m<=0xD8)){i+=2;continue;}
+    const len=(bin.charCodeAt(i+2)<<8)|bin.charCodeAt(i+3);
+    const data=bin.substr(i+4,len-2);
+    let label='(lainnya)';
+    const name=m===0xFE?'COM':'APP'+(m-0xE0);
+    if(m===0xE1&&data.startsWith('Exif\0\0'))label='Exif';
+    else if(m===0xE1&&data.startsWith('http://ns.adobe.com/xap/1.0/')){
+      label='XMP';
+      const a=data.indexOf('<x:xmpmeta'),b=data.indexOf('</x:xmpmeta>');
+      const x=a>=0?data.slice(a,b>0?b+12:undefined):data.slice(29);
+      const xt=u8dec(x);meta.raw.push({title:'XMP',text:xt});scan+=xt+'\n';
+    }
+    else if(m===0xEB){label='JUMBF (Content Credentials)';scan+=data.slice(0,6000).replace(/[^\x20-\x7E]+/g,' ')+'\n';}
+    else if(m===0xE0)label='JFIF';
+    else if(m===0xE2)label='Profil ICC';
+    else if(m===0xED){label='Photoshop / IPTC';scan+=data.slice(0,6000).replace(/[^\x20-\x7E]+/g,' ')+'\n';}
+    else if(m===0xEE)label='Adobe';
+    else if(m===0xFE){label='Komentar';const c=u8dec(data);meta.raw.push({title:'Komentar JPEG',text:c});scan+=c+'\n';}
+    segs.push([name+' (0x'+m.toString(16).toUpperCase()+')',label+', '+(len-2)+' byte']);
+    i+=2+len;
+  }
+  meta.sections.push({title:'Segmen file JPEG',rows:segs});
+  meta.scan+=scan;
+}
+
+async function inflate(u8){
+  try{
+    const ds=new DecompressionStream('deflate');
+    const s=new Blob([u8]).stream().pipeThrough(ds);
+    return new Uint8Array(await new Response(s).arrayBuffer());
+  }catch(e){return null;}
+}
+async function readPNG(file,meta){
+  const buf=await file.arrayBuffer();const dv=new DataView(buf);const u=new Uint8Array(buf);
+  const lat=new TextDecoder('latin1'),utf=new TextDecoder('utf-8');
+  const textRows=[];let p=8;
+  const addText=(k,v)=>{
+    meta.scan+=k+': '+v+'\n';
+    if(v.length>200||v.indexOf('\n')>=0){meta.raw.push({title:'PNG teks: '+k,text:v});textRows.push([k,'('+v.length+' karakter, lihat blok di bawah)']);}
+    else textRows.push([k,v]);
+  };
+  while(p+8<=u.length){
+    const len=dv.getUint32(p);
+    const type=String.fromCharCode(u[p+4],u[p+5],u[p+6],u[p+7]);
+    const d=u.subarray(p+8,p+8+len);
+    if(type==='IHDR')meta.info.push(['Dimensi',dv.getUint32(p+8)+' × '+dv.getUint32(p+12)+' px']);
+    else if(type==='tEXt'){const z=d.indexOf(0);addText(lat.decode(d.subarray(0,z)),lat.decode(d.subarray(z+1)));}
+    else if(type==='zTXt'){const z=d.indexOf(0);const t=await inflate(d.subarray(z+2));addText(lat.decode(d.subarray(0,z)),t?lat.decode(t):'(terkompresi, tidak bisa dibuka)');}
+    else if(type==='iTXt'){
+      const z=d.indexOf(0);const comp=d[z+1];let q=z+3;
+      q=d.indexOf(0,q)+1;q=d.indexOf(0,q)+1;
+      let body=d.subarray(q);
+      if(comp){body=await inflate(body);}
+      addText(utf.decode(d.subarray(0,z)),body?utf.decode(body):'(terkompresi, tidak bisa dibuka)');
+    }
+    else if(type==='eXIf'){
+      try{meta.exifObj=piexif.load(fakeJpegFromTiff(d));}catch(e){meta.notes.push('Chunk eXIf tidak terbaca: '+e.message);}
+    }
+    else if(type==='caBX'){meta.scan+=' c2pa (chunk caBX) \n';textRows.push(['Chunk caBX','Content Credentials (C2PA)']);}
+    p+=12+len;
+    if(type==='IEND')break;
+  }
+  if(textRows.length)meta.sections.push({title:'Teks PNG',rows:textRows});
+}
+async function readWEBP(file,meta){
+  const buf=await file.arrayBuffer();const dv=new DataView(buf);const u=new Uint8Array(buf);
+  let p=12;const rows=[];
+  while(p+8<=u.length){
+    const type=String.fromCharCode(u[p],u[p+1],u[p+2],u[p+3]);
+    const len=dv.getUint32(p+4,true);
+    const d=u.subarray(p+8,p+8+len);
+    rows.push([type,len+' byte']);
+    if(type==='EXIF'){try{meta.exifObj=piexif.load(fakeJpegFromTiff(d));}catch(e){meta.notes.push('Chunk EXIF tidak terbaca: '+e.message);}}
+    else if(type==='XMP '){const t=new TextDecoder('utf-8').decode(d);meta.raw.push({title:'XMP',text:t});meta.scan+=t+'\n';}
+    else if(type==='C2PA'){meta.scan+=' c2pa \n';}
+    else if(type==='VP8X'&&len>=10){meta.info.push(['Dimensi',((d[4]|(d[5]<<8)|(d[6]<<16))+1)+' × '+((d[7]|(d[8]<<8)|(d[9]<<16))+1)+' px']);}
+    p+=8+len+(len&1);
+  }
+  meta.sections.push({title:'Chunk WebP',rows});
+}
+
+async function readMP4(file,meta){
+  let off=0;const top=[];let moov=null;
+  while(off<file.size){
+    const h=new DataView(await file.slice(off,off+32).arrayBuffer());
+    if(h.byteLength<8)break;
+    let size=h.getUint32(0);
+    const type=String.fromCharCode(h.getUint8(4),h.getUint8(5),h.getUint8(6),h.getUint8(7));
+    let hdr=8;
+    if(size===1){size=Number(h.getBigUint64(8));hdr=16;}else if(size===0)size=file.size-off;
+    if(size<8)break;
+    top.push(type);
+    if(type==='ftyp'){const b=await file.slice(off+8,off+12).arrayBuffer();meta.info.push(['Brand',new TextDecoder().decode(b)]);}
+    if(type==='moov'&&size<64*1048576)moov=await file.slice(off+hdr,off+size).arrayBuffer();
+    if(type==='uuid'&&size<2*1048576){
+      const b=new Uint8Array(await file.slice(off+hdr,off+size).arrayBuffer());
+      const id=[...b.subarray(0,16)].map(x=>x.toString(16).padStart(2,'0')).join('');
+      if(id==='d8fec3d61b0e483c92975828877ec481')meta.scan+=' c2pa (box uuid C2PA) \n';
+      const t=new TextDecoder('utf-8').decode(b.subarray(16));
+      if(/<x:xmpmeta|<\?xpacket/.test(t)){meta.raw.push({title:'XMP (video)',text:t.slice(0,30000)});meta.scan+=t.slice(0,30000)+'\n';}
+    }
+    off+=size;
+  }
+  const rows=[['Struktur box',top.join(', ')]];
+  if(moov)parseMoov(moov,rows,meta);
+  meta.sections.push({title:'Metadata video',rows});
+}
+function parseMoov(buf,rows,meta){
+  const dv=new DataView(buf);const dec=new TextDecoder('utf-8');
+  const t4=o=>String.fromCharCode(dv.getUint8(o),dv.getUint8(o+1),dv.getUint8(o+2),dv.getUint8(o+3));
+  const CONT=new Set(['trak','mdia','minf','stbl','udta','edts','dinf']);
+  let keys=[];
+  const date=s=>s>0?new Date((s-2082844800)*1000).toISOString():'(kosong)';
+  function add(k,v){rows.push([k,v]);meta.scan+=k+': '+v+'\n';}
+  function walk(s,e,inIlst){
+    while(s+8<=e){
+      let sz=dv.getUint32(s);const ty=t4(s+4);let hs=8;
+      if(sz===1){sz=Number(dv.getBigUint64(s+8));hs=16;}else if(sz===0)sz=e-s;
+      if(sz<8||s+sz>e)break;
+      const bs=s+hs,be=s+sz;
+      if(inIlst){
+        const idx=dv.getUint32(s+4);
+        const nm=keys[idx-1]||ty.replace(/\xA9/g,'©');
+        if(bs+16<=be&&t4(bs+4)==='data')add(nm,dec.decode(new Uint8Array(buf,bs+16,be-bs-16)));
+      }
+      else if(ty==='mvhd'){
+        const v=dv.getUint8(bs);let ct,mt,ts,du;
+        if(v===1){ct=Number(dv.getBigUint64(bs+4));mt=Number(dv.getBigUint64(bs+12));ts=dv.getUint32(bs+20);du=Number(dv.getBigUint64(bs+24));}
+        else{ct=dv.getUint32(bs+4);mt=dv.getUint32(bs+8);ts=dv.getUint32(bs+12);du=dv.getUint32(bs+16);}
+        rows.push(['Dibuat (mvhd)',date(ct)]);rows.push(['Diubah (mvhd)',date(mt)]);
+        if(ts)rows.push(['Durasi',(du/ts).toFixed(2)+' detik']);
+      }
+      else if(ty==='tkhd'){
+        const v=dv.getUint8(bs);const o=v===1?bs+88:bs+76;
+        if(o+8<=be){const w=dv.getUint32(o)/65536,h=dv.getUint32(o+4)/65536;if(w>0&&h>0)rows.push(['Resolusi track',w+' × '+h]);}
+      }
+      else if(ty==='meta'){walk(t4(bs+4)==='hdlr'?bs:bs+4,be,false);}
+      else if(ty==='keys'){
+        const n=dv.getUint32(bs+4);let o=bs+8;
+        for(let i=0;i<n&&o+8<=be;i++){const ks=dv.getUint32(o);keys.push(dec.decode(new Uint8Array(buf,o+8,ks-8)));o+=ks;}
+      }
+      else if(ty==='ilst'){walk(bs,be,true);}
+      else if(ty.charCodeAt(0)===0xA9){
+        const l=dv.getUint16(bs);
+        add(ty.replace(/\xA9/g,'©'),dec.decode(new Uint8Array(buf,bs+4,Math.min(l,be-bs-4))));
+      }
+      else if(CONT.has(ty))walk(bs,be,false);
+      s+=sz;
+    }
+  }
+  walk(0,buf.byteLength,false);
+}
+
+/* ---------- compose metadata ---------- */
+async function readMeta(file){
+  const type=await sniff(file);
+  const meta={type,name:file.name,size:file.size,sections:[],raw:[],info:[],scan:'',notes:[],exifObj:null,ai:[]};
+  try{
+    if(type==='jpeg')await readJPEG(file,meta);
+    else if(type==='png')await readPNG(file,meta);
+    else if(type==='webp')await readWEBP(file,meta);
+    else if(type==='mp4')await readMP4(file,meta);
+    else meta.notes.push('Format ini belum bisa dibaca secara rinci di browser.');
+  }catch(e){meta.notes.push('Gagal membaca: '+e.message);}
+  const exSecs=meta.exifObj?exifSections(meta.exifObj):[];
+  const head={title:'Berkas',rows:[['Nama',file.name],['Format',type.toUpperCase()],['Ukuran',fmtSize(file.size)],...meta.info]};
+  const body=meta.sections;
+  meta.sections=[head,...exSecs,...body];
+  const rowText=[...exSecs,...body].flatMap(s=>s.rows.map(r=>r[0]+': '+r[1])).join('\n');
+  const all=meta.scan+'\n'+meta.raw.map(r=>r.text).join('\n')+'\n'+rowText;
+  meta.ai=detectAI(all);
+  if(meta.ai.length===0&&detectAI(file.name).length)meta.notes.push('Nama file menyerupai nama generator AI (sinyal lemah).');
+  if(['jpeg','png','webp'].includes(type)){
+    const z=meta.exifObj&&meta.exifObj['0th'];
+    if(!z||(!z[271]&&!z[272]))meta.notes.push('Tidak ada Make/Model kamera di EXIF (sinyal lemah, banyak gambar hasil edit atau unduhan juga begini).');
+  }
+  return meta;
+}
+
+/* ---------- rendering ---------- */
+function renderMeta(el,meta,title){
+  const strong=meta.ai.length>0;
+  let h='<h3>'+esc(title)+'</h3>';
+  h+='<div class="verdict '+(strong?'flag':'')+'"><strong>'+(strong?'Penanda AI ditemukan di metadata':'Tidak ada penanda AI di metadata')+'</strong>';
+  if(strong)h+='<ul>'+meta.ai.map(a=>'<li>'+esc(a.label)+' <span style="color:var(--muted)">(cocok: '+esc(a.evidence)+')</span></li>').join('')+'</ul>';
+  if(meta.notes.length)h+='<ul>'+meta.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>';
+  h+='<small>Hanya membaca metadata. Metadata bisa dihapus atau dipalsukan.</small></div>';
+  h+='<input class="find" type="search" placeholder="Cari tag atau nilai" aria-label="Cari metadata">';
+  for(const s of meta.sections){
+    h+='<details open><summary>'+esc(s.title)+' ('+s.rows.length+')</summary><div class="scrollx"><table>'
+      +s.rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table></div></details>';
+  }
+  for(const r of meta.raw){
+    h+='<details><summary>'+esc(r.title)+'</summary><pre>'+esc(r.text.slice(0,40000))+'</pre></details>';
+  }
+  el.innerHTML=h;el.hidden=false;
+  const f=el.querySelector('.find');
+  f.addEventListener('input',()=>{
+    const q=f.value.trim().toLowerCase();
+    el.querySelectorAll('tr').forEach(tr=>{tr.style.display=!q||tr.textContent.toLowerCase().includes(q)?'':'none';});
+    if(q)el.querySelectorAll('details').forEach(d=>d.open=true);
+  });
+}
+
+/* ---------- file slots ---------- */
+function updateButtons(){
+  const hasSrcFile=state.src&&state.src.file&&!state.src.fromJson;
+  const hasSrcMeta=state.src&&state.src.meta&&has(state.src.meta.exifObj);
+  $('#btn-read').disabled=!(hasSrcFile||(state.tgt&&state.tgt.file));
+  /* Proses: butuh sumber (file atau JSON) yang punya EXIF + target */
+  $('#btn-proc').disabled=!(state.src&&state.src.meta&&has(state.src.meta.exifObj)&&state.tgt&&state.tgt.file);
+  $('#btn-dl').disabled=!state.out;
+  $('#btn-export-json').disabled=!hasSrcMeta;
+}
+function has(o){return o&&['0th','Exif','GPS','Interop'].some(k=>o[k]&&Object.keys(o[k]).length);}
+function setFile(role,file){
+  if(!file)return;
+  if(state[role]&&state[role].url)URL.revokeObjectURL(state[role].url);
+  const url=URL.createObjectURL(file);
+  state[role]={file,url,meta:null,fromJson:false};
+  state.out=null;
+  const drop=$('#drop-'+role);
+  const isVid=(file.type||'').startsWith('video/');
+  drop.innerHTML=isVid?'<video src="'+url+'" controls muted playsinline></video>':'<img alt="Pratinjau '+role+'" src="'+url+'">';
+  $('#info-'+role).textContent=file.name+' · '+fmtSize(file.size)+' · '+(file.type||'tipe tidak dikenal');
+  $('#panel-'+role).hidden=true;$('#panel-out').hidden=true;
+  setStatus('');updateButtons();
+}
+for(const role of ['src','tgt']){
+  const input=$('#f-'+role),drop=$('#drop-'+role);
+  input.addEventListener('change',()=>setFile(role,input.files[0]));
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+  drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])setFile(role,e.dataTransfer.files[0]);});
+}
+
+/* ---------- JSON export / import ---------- */
+/* Thumbnail EXIF disimpan sebagai string biner; untuk JSON diubah ke base64 agar aman. */
+function b64encode(binStr){
+  if(!binStr)return null;
+  const u=new Uint8Array(binStr.length);
+  for(let i=0;i<binStr.length;i++)u[i]=binStr.charCodeAt(i)&255;
+  let s='';const chunk=0x8000;
+  for(let i=0;i<u.length;i+=chunk)s+=String.fromCharCode.apply(null,u.subarray(i,i+chunk));
+  return btoa(s);
+}
+function b64decode(b64){
+  if(!b64)return null;
+  const s=atob(b64);
+  let out='';
+  for(let i=0;i<s.length;i++)out+=s[i];
+  return out;
+}
+function cloneExifForJson(ex){
+  const c=JSON.parse(JSON.stringify(ex));
+  /* JSON.stringify mengubah string biner (thumbnail) jadi escaped unicode — OK untuk tag teks,
+     tapi thumbnail besar lebih baik base64 + flag agar import bisa restore sempurna. */
+  if(ex&&typeof ex.thumbnail==='string'&&ex.thumbnail.length){
+    c.thumbnail=null;
+    c._thumbnailBase64=b64encode(ex.thumbnail);
+  }
+  return c;
+}
+function restoreExifFromJson(ex){
+  if(!ex||typeof ex!=='object')return null;
+  const out={};
+  for(const k of ['0th','Exif','GPS','Interop','1st'])out[k]=(ex[k]&&typeof ex[k]==='object')?ex[k]:{};
+  if(ex._thumbnailBase64)out.thumbnail=b64decode(ex._thumbnailBase64);
+  else if(typeof ex.thumbnail==='string')out.thumbnail=ex.thumbnail;
+  else out.thumbnail=null;
+  return out;
+}
+function exportSrcJson(){
+  if(!state.src||!state.src.meta||!state.src.meta.exifObj)return setStatus('Tidak ada metadata sumber untuk diekspor. Baca sumber dulu (tombol 3) atau impor JSON.','err');
+  if(!has(state.src.meta.exifObj))return setStatus('Sumber tidak punya EXIF yang bisa diekspor.','err');
+  const payload={
+    version:2,
+    app:'Metadata Cloner',
+    exportedAt:new Date().toISOString(),
+    sourceName:(state.src.file&&state.src.file.name)||state.src.jsonName||'metadata.json',
+    sourceType:state.src.meta.type||'unknown',
+    exifObj:cloneExifForJson(state.src.meta.exifObj)
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  const base=((state.src.file&&state.src.file.name)||state.src.jsonName||'metadata').replace(/\.[^.]+$/,'');
+  a.href=URL.createObjectURL(blob);
+  a.download=base+'_exif.json';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  setStatus('JSON metadata sumber diunduh ('+base+'_exif.json).','ok');
+}
+$('#btn-export-json').addEventListener('click',exportSrcJson);
+
+async function importJsonFile(file){
+  if(!file)return;
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    if(!data.exifObj||typeof data.exifObj!=='object')throw new Error('File JSON tidak berisi exifObj yang valid. Pastikan file hasil Export JSON dari alat ini.');
+    const ex=restoreExifFromJson(data.exifObj);
+    if(!has(ex))throw new Error('exifObj di JSON kosong atau tidak punya tag IFD yang bisa dipakai.');
+    const meta={
+      type:data.sourceType||'json',
+      name:file.name,
+      size:file.size,
+      sections:[],
+      raw:[],
+      info:[],
+      scan:'',
+      notes:['Metadata diimpor dari file JSON'+(data.exportedAt?' (diekspor '+data.exportedAt+')':'')+'.'],
+      exifObj:ex,
+      ai:[]
+    };
+    const exSecs=exifSections(ex);
+    meta.sections=[{title:'Berkas',rows:[
+      ['Nama',file.name],
+      ['Asal',data.sourceName||'(tidak diketahui)'],
+      ['Format sumber',(data.sourceType||'?').toUpperCase()],
+      ['Diekspor',data.exportedAt||'—'],
+      ['Versi JSON',String(data.version||1)]
+    ]},...exSecs];
+    meta.ai=detectAI(JSON.stringify(ex));
+    if(state.src&&state.src.url)URL.revokeObjectURL(state.src.url);
+    state.src={file:null,url:null,meta,fromJson:true,jsonName:file.name};
+    state.out=null;
+    $('#drop-src').innerHTML='<span style="color:var(--accent);font-weight:700">JSON · '+esc(file.name)+'</span>';
+    $('#info-src').textContent=file.name+' · '+fmtSize(file.size)+' · metadata JSON'+(data.sourceName?' · asal: '+data.sourceName:'');
+    renderMeta($('#panel-src'),meta,'Sumber (JSON) · '+file.name);
+    $('#panel-out').hidden=true;
+    /* Reset input agar file yang sama bisa diimpor ulang */
+    const fj=$('#f-json');if(fj)fj.value='';
+    updateButtons();
+    setStatus('Metadata JSON berhasil diimpor. Siap dipakai sebagai sumber (tidak perlu upload gambar sumber).','ok');
+  }catch(e){
+    setStatus('Gagal impor JSON: '+e.message,'err');
+  }
+}
+$('#f-json').addEventListener('change',()=>importJsonFile($('#f-json').files[0]));
+const dropJson=$('#drop-json');
+dropJson.addEventListener('dragover',e=>{e.preventDefault();dropJson.classList.add('over');});
+dropJson.addEventListener('dragleave',()=>dropJson.classList.remove('over'));
+dropJson.addEventListener('drop',e=>{e.preventDefault();dropJson.classList.remove('over');if(e.dataTransfer.files[0])importJsonFile(e.dataTransfer.files[0]);});
+
+/* ---------- actions ---------- */
+async function extract(){
+  for(const [role,label] of [['src','Sumber'],['tgt','Target']]){
+    const s=state[role];if(!s)continue;
+    if(s.fromJson&&s.meta){renderMeta($('#panel-'+role),s.meta,label+' (JSON) · '+(s.jsonName||''));continue;}
+    if(!s.file)continue;
+    setStatus('Membaca '+label.toLowerCase()+'…');
+    s.meta=await readMeta(s.file);
+    renderMeta($('#panel-'+role),s.meta,label+' · '+s.file.name);
+  }
+  updateButtons();
+}
+$('#btn-read').addEventListener('click',async()=>{
+  if(!window.piexif)return setStatus('Library piexifjs gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.','err');
+  await extract();
+  setStatus('Metadata selesai dibaca.','ok');
+  updateButtons();
+});
+
+async function toJpegBin(file){
+  const bmp=await createImageBitmap(file);
+  const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
+  const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(bmp,0,0);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.95));
+  return {bin:toBin(await blob.arrayBuffer()),w:c.width,h:c.height};
+}
+/* Hapus semua segmen metadata JPEG (APP0–APP15, COM, dll.) sehingga hanya tersisa data gambar. */
+function stripJpegMeta(bin){
+  if(bin.charCodeAt(0)!==0xFF||bin.charCodeAt(1)!==0xD8)throw new Error('Bukan JPEG valid');
+  let out='\xFF\xD8',i=2;
+  while(i<bin.length-1){
+    if(bin.charCodeAt(i)!==0xFF){out+=bin.slice(i);break;}
+    const m=bin.charCodeAt(i+1);
+    if(m===0xD9){out+='\xFF\xD9';break;} /* EOI */
+    if(m===0xDA){out+=bin.slice(i);break;} /* SOS + image data */
+    if(m===0x00||m===0xFF){i++;continue;}
+    if(m===0x01||(m>=0xD0&&m<=0xD7)){out+=bin.substr(i,2);i+=2;continue;} /* TEM / RST */
+    if(i+3>=bin.length)break;
+    const len=(bin.charCodeAt(i+2)<<8)|bin.charCodeAt(i+3);
+    if(len<2)break;
+    /* Buang APP0–APP15 (0xE0–0xEF), COM (0xFE), dan marker metadata lain */
+    const isMeta=(m>=0xE0&&m<=0xEF)||m===0xFE;
+    if(!isMeta)out+=bin.substr(i,2+len);
+    i+=2+len;
+  }
+  return out;
+}
+function safeDump(ex){
+  const dropped=[];
+  for(let n=0;n<50;n++){
+    try{return {str:piexif.dump(ex),dropped};}
+    catch(e){
+      let found=false;
+      for(const k of ['0th','Exif','GPS','Interop','1st']){
+        if(!ex[k])continue;
+        for(const t of Object.keys(ex[k])){
+          try{piexif.dump({[k]:{[t]:ex[k][t]}});}
+          catch(e2){dropped.push(k+':'+t);delete ex[k][t];found=true;}
+        }
+      }
+      if(!found)throw e;
+    }
+  }
+  throw new Error('Gagal menyusun EXIF.');
+}
+$('#btn-proc').addEventListener('click',async()=>{
+  if(!window.piexif)return setStatus('Library piexifjs gagal dimuat. Muat ulang halaman.','err');
+  try{
+    if(!state.src||!state.tgt)return;
+    if(!state.src.meta||!state.tgt.meta)await extract();
+    const sm=state.src.meta,tm=state.tgt.meta;
+    if(!has(sm.exifObj))return setStatus('Sumber tidak punya EXIF yang bisa disalin. Format sumber: '+(sm.type||'?').toUpperCase()+'.','err');
+    if(!state.tgt.file)return setStatus('Target belum diunggah.','err');
+    if(!['jpeg','png','webp'].includes(tm.type))return setStatus('Menyalin metadata ke target '+tm.type.toUpperCase()+' belum didukung di browser. Lihat perintah exiftool atau ffmpeg di bagian bawah halaman.','err');
+
+    setStatus('Memproses…');
+    let jpegBin,converted=false,dims=null,stripped=false;
+    if(tm.type==='jpeg'){
+      /* Hapus SEMUA metadata target (EXIF, XMP, C2PA/JUMBF, IPTC, COM, dll.) dulu */
+      jpegBin=stripJpegMeta(toBin(await state.tgt.file.arrayBuffer()));
+      stripped=true;
+    }else{
+      const r=await toJpegBin(state.tgt.file);
+      jpegBin=r.bin;dims=[r.w,r.h];converted=true;
+      /* Canvas re-encode sudah bersih dari metadata */
+    }
+
+    const ex=JSON.parse(JSON.stringify(sm.exifObj));
+    if($('#o-thumb').checked){ex.thumbnail=null;ex['1st']={};}
+    if(!$('#o-gps').checked)ex.GPS={};
+    if($('#o-geo').checked){
+      /* Pertahankan orientasi/ukuran target — ambil dari target asli (sebelum strip) atau dari canvas */
+      const tex=tm.exifObj;
+      const G=[['0th',piexif.ImageIFD.Orientation],['0th',piexif.ImageIFD.ImageWidth],['0th',piexif.ImageIFD.ImageLength],['Exif',piexif.ExifIFD.PixelXDimension],['Exif',piexif.ExifIFD.PixelYDimension]];
+      for(const [k,t] of G){
+        if(!ex[k])ex[k]={};
+        if(tex&&tex[k]&&tex[k][t]!==undefined)ex[k][t]=tex[k][t];else delete ex[k][t];
+      }
+      if(dims){
+        if(!ex.Exif)ex.Exif={};
+        ex.Exif[piexif.ExifIFD.PixelXDimension]=dims[0];
+        ex.Exif[piexif.ExifIFD.PixelYDimension]=dims[1];
+      }
+    }
+    const {str,dropped}=safeDump(ex);
+    const outBin=piexif.insert(str,jpegBin);
+    const blob=new Blob([binToBytes(outBin)],{type:'image/jpeg'});
+    const base=state.tgt.file.name.replace(/\.[^.]+$/,'');
+    const name=base+'_cloned.jpg';
+    const outFile=new File([blob],name,{type:'image/jpeg'});
+    const meta=await readMeta(outFile);
+    state.out={blob,name,meta};
+    renderMeta($('#panel-out'),meta,'Hasil · '+name);
+
+    const notes=[];
+    if(state.src.fromJson)notes.push('Sumber metadata dari file JSON: '+(state.src.jsonName||'import'));
+    if(stripped)notes.push('Semua metadata target (termasuk penanda AI: XMP, C2PA/JUMBF, IPTC, dll.) dihapus sebelum menyalin EXIF sumber.');
+    if(converted)notes.push('Target '+tm.type.toUpperCase()+' di-encode ulang ke JPEG (kualitas 95) — metadata asli ikut hilang.');
+    if(dropped.length)notes.push(dropped.length+' tag dilewati karena tidak valid ('+dropped.join(', ')+').');
+    if(tm.ai.length&&!meta.ai.length)notes.push('Penanda AI pada target berhasil dihapus.');
+    else if(tm.ai.length&&meta.ai.length)notes.push('Peringatan: penanda AI masih terdeteksi (mungkin dari sumber, atau strip belum sempurna).');
+    notes.push('Hasil hanya berisi metadata dari sumber (plus opsi orientasi/ukuran target jika dicentang).');
+    const extra=document.createElement('div');extra.className='verdict';extra.innerHTML='<strong>Ringkasan proses</strong><ul>'+notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>';
+    $('#panel-out').insertBefore(extra,$('#panel-out').children[1]);
+    updateButtons();
+    setStatus('Selesai. Metadata target dihapus, EXIF sumber disalin; klik Unduh hasil.','ok');
+    $('#panel-out').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){
+    setStatus('Gagal memproses: '+e.message,'err');
+  }
+});
+$('#btn-dl').addEventListener('click',()=>{
+  if(!state.out)return;
+  const a=document.createElement('a');a.href=URL.createObjectURL(state.out.blob);a.download=state.out.name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+});
+if(!window.piexif)setStatus('Library piexifjs belum termuat. Periksa koneksi internet lalu muat ulang halaman.','err');
+</script>
+</body>
+</html>
